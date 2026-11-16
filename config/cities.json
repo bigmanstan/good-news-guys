@@ -1,0 +1,13 @@
+{
+  "_help": "Cities that get a /local/<slug> page. Local stories come from the outlet feeds in sources.json with a matching region. Set googleNews: true to also pull a Google News search for that city (headlines only, so those stories always go to review, never straight to the site). lat/lon map a reader's one-time location lookup to the nearest city.",
+  "cities": [
+    { "slug": "toronto",   "name": "Toronto",   "country": "CA", "lang": "en", "lat": 43.6532, "lon": -79.3832 },
+    { "slug": "montreal",  "name": "Montreal",  "country": "CA", "lang": "en", "lat": 45.5019, "lon": -73.5674 },
+    { "slug": "vancouver", "name": "Vancouver", "country": "CA", "lang": "en", "lat": 49.2827, "lon": -123.1207 },
+    { "slug": "calgary",   "name": "Calgary",   "country": "CA", "lang": "en", "lat": 51.0447, "lon": -114.0719 },
+    { "slug": "ottawa",    "name": "Ottawa",    "country": "CA", "lang": "en", "lat": 45.4215, "lon": -75.6972 },
+    { "slug": "new-york",  "name": "New York",  "country": "US", "lang": "en", "lat": 40.7128, "lon": -74.0060 },
+    { "slug": "chicago",   "name": "Chicago",   "country": "US", "lang": "en", "lat": 41.8781, "lon": -87.6298 },
+    { "slug": "london",    "name": "London",    "country": "GB", "lang": "en", "lat": 51.5072, "lon": -0.1276 }
+  ]
+}

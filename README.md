@@ -15,11 +15,28 @@ public/          static assets
 
 Run locally with `npm run dev`. Build with `npm run build`.
 
+## Running the pipeline
+
+| Command | What it does |
+| --- | --- |
+| `npm run digest:dry` | Fetch and score everything, print the digest and review queue, write nothing |
+| `npm run digest` | Write `data/digests/<today>.json` and `data/review/<today>.json` |
+| `npm run review:apply` | Apply `approve` / `reject` decisions from review files to their digests |
+| `npm test` | Unit tests for the pipeline |
+
+Extra flags for `node pipeline/run.js`: `--date YYYY-MM-DD`, `--no-local`, `--only gnn,nasa`, `--scheduled` (exit early unless it's 6 AM or later in Toronto and today's digest doesn't exist yet).
+
+**Tuning.** All knobs are in `config/`: feeds in `sources.json`, cities in `cities.json`, and the blocklist, skip patterns, word scores, thresholds and category keywords in `scoring.json`. A dry run prints what each rule filtered, so you can adjust and rerun.
+
+**Pinning.** Set `"pinned": true` on a story in that day's digest file. Pinned stories always go to the top 3.
+
+**GitHub setup.** In the repo's Settings → Actions → General, set workflow permissions to "Read and write" and tick "Allow GitHub Actions to create and approve pull requests". Otherwise the daily job can't push the digest or open the review PR.
+
 ## How a day runs
 
 1. **6 AM Toronto time**: a GitHub Actions workflow starts a Node script.
 2. **Fetch**: the script pulls about 30–50 RSS feeds and normalizes each item (title, link, source, date, description, image).
-3. **Filter**: a keyword blocklist rejects obvious negatives. A scorer (keywords plus sentiment, or a free LLM tier later) then rates each remaining story positive, neutral or negative, with a confidence score. Confident positives go into the digest. Uncertain ones go to the review queue, never straight to the site.
+3. **Filter**: all rules are plain code, with no LLM or outside service. Skip patterns drop sports results, spam and listicles, and a word blocklist drops obvious negatives. Items that arrive with only a headline get their description from the article page's own meta tags, and the blocklist runs again on that text. A word-list scorer (the AFINN sentiment lexicon plus our own weights in `scoring.json`) then rates each remaining story positive, neutral or negative, with a confidence score. Confident positives go into the digest. Uncertain ones go to the review queue, never straight to the site.
 4. **Dedupe**: stories with very similar titles (by word overlap) are merged. The most reputable source becomes the main link, and the others are listed under "also covered by."
 5. **Summarize**: each story gets a 2–3 sentence summary, a category, a read time and a source credit.
 6. **Publish**: the day is saved as `data/digests/YYYY-MM-DD.json` and committed, which triggers a Cloudflare Pages rebuild.
@@ -44,7 +61,7 @@ Only bookmarks, the light/dark theme and the saved city run in the browser, all 
 
 ## Local news without tracking
 
-The pipeline pulls Google News RSS for a fixed list of cities (the 20–50 largest at first). Readers pick a city, or allow a one-time location lookup that maps to the nearest listed city. Only the city name is saved, and only in the reader's browser.
+Each city in `config/cities.json` gets its stories from local outlets' own RSS feeds (entries in `config/sources.json` with a matching `region`), which include real descriptions. Google News search can be switched on per city with `googleNews: true` as a fallback. It only provides headlines, so those stories always go to review. Readers pick a city, or allow a one-time location lookup that maps to the nearest listed city. Only the city name is saved, and only in the reader's browser.
 
 ## Admin and review
 

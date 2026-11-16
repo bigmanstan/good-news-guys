@@ -1,0 +1,72 @@
+name: Daily digest
+
+# GitHub cron runs in UTC. 10:00 UTC is 6 AM Toronto in summer (EDT),
+# 11:00 UTC is 6 AM in winter (EST). Both fire; the script's --scheduled
+# flag skips the run if it's before 6 AM Toronto or today's digest exists.
+on:
+  schedule:
+    - cron: '0 10 * * *'
+    - cron: '0 11 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: daily-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build today's digest
+        run: node pipeline/run.js ${{ github.event_name == 'schedule' && '--scheduled' || '' }}
+
+      - name: Commit digest to main
+        id: digest
+        run: |
+          DATE=$(TZ=America/Toronto date +%F)
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+          git config user.name "good-news-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/digests
+          if git diff --cached --quiet; then
+            echo "No digest changes."
+          else
+            git commit -m "Digest for $DATE"
+            git push
+          fi
+
+      - name: Open review PR for uncertain stories
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DATE: ${{ steps.digest.outputs.date }}
+        run: |
+          FILE="data/review/$DATE.json"
+          # Review files live only on review/* branches until merged, so on a fresh
+          # checkout of main the file exists only if this run just wrote it.
+          if [ ! -f "$FILE" ]; then
+            echo "No review queue for $DATE."
+            exit 0
+          fi
+          BRANCH="review/$DATE"
+          git switch -c "$BRANCH"
+          git add "$FILE"
+          git commit -m "Review queue for $DATE"
+          git push --force -u origin "$BRANCH"
+          COUNT=$(node -e "console.log(require('./$FILE').items.length)")
+          gh pr view "$BRANCH" >/dev/null 2>&1 || gh pr create \
+            --base main --head "$BRANCH" \
+            --title "Review $COUNT uncertain stories for $DATE" \
+            --body "Open \`$FILE\` (Files changed → ⋯ → Edit file) and set each \`decision\` to \`approve\` or \`reject\`. Leave it blank to skip. Merge when done; approved stories are added to the $DATE digest automatically."
