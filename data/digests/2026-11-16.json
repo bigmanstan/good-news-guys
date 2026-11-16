@@ -1,6 +1,6 @@
 {
   "date": "2026-11-16",
-  "generatedAt": "2026-11-16T06:17:13.378Z",
+  "generatedAt": "2026-11-16T06:25:58.949Z",
   "top3": [
     "5543387245",
     "c90c94b3e8",
@@ -101,6 +101,22 @@
       "publishedAt": "2026-11-16T00:00:02.000Z",
       "digestDate": "2026-11-16",
       "image": "https://www.optimistdaily.com/wp-content/uploads/young-man-waking-up-Depositphotos_158926690_S.jpg",
+      "pinned": false
+    },
+    {
+      "id": "1b8bd540db",
+      "headline": "The Beaches Santa Claus Parade kicks off Toronto's festive season",
+      "summary": "The mayor, snowmen and Santa Claus appeared at the east-end event marking one of the first local holiday celebrations.",
+      "sourceName": "Toronto Star",
+      "sourceLink": "https://www.thestar.com/news/the-beaches-santa-claus-parade-kicks-off-toronto-s-festive-season/article_98e86685-2ad0-48f8-851a-dfc0f9ce2ff1.html",
+      "alsoCoveredBy": [],
+      "category": "community",
+      "region": "toronto",
+      "positivity": 0.75,
+      "readTime": 3,
+      "publishedAt": "2026-11-15T22:45:00.000Z",
+      "digestDate": "2026-11-16",
+      "image": "https://bloximages.chicago2.vip.townnews.com/thestar.com/content/tncms/assets/v3/editorial/f/75/f75407e1-26e0-5bc2-9585-3a7c1f2dddd9/6afa16fe30d93.image.jpg?resize=300%2C200",
       "pinned": false
     },
     {
