@@ -1,0 +1,104 @@
+---
+import BookmarkButton from './BookmarkButton.astro';
+import { categoryLabel, cityName, type Story } from '../lib/data';
+
+interface Props {
+  story: Story;
+  variant?: 'lead' | 'card' | 'compact';
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { story, variant = 'card', headingLevel = 'h3' } = Astro.props;
+const Heading = headingLevel;
+const city = cityName(story.region);
+const cat = story.category;
+---
+
+<article class:list={['story', variant]} style={`--cat: var(--cat-${cat}, var(--cat-general))`}>
+  {variant === 'lead' && story.image && (
+    <a class="media" href={`/story/${story.id}`} tabindex="-1" aria-hidden="true">
+      <img src={story.image} alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" />
+    </a>
+  )}
+  <div class="body">
+    <div class="tags">
+      <a class="tag" href={`/category/${cat}`}>{categoryLabel(cat)}</a>
+      {city && <a class="tag city" href={`/local/${story.region}`}>{city}</a>}
+      {story.pinned && <span class="tag pin">Editor’s pick</span>}
+    </div>
+    <Heading class="headline"><a href={`/story/${story.id}`}>{story.headline}</a></Heading>
+    {variant !== 'compact' && story.summary && <p class="summary">{story.summary}</p>}
+    <div class="meta">
+      <span class="source">
+        <a href={story.sourceLink} rel="noopener" target="_blank">{story.sourceName}</a>
+        {story.alsoCoveredBy.length > 0 && <span class="also">+{story.alsoCoveredBy.length} more</span>}
+      </span>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>{story.readTime} min read</span>
+      <BookmarkButton story={story} />
+    </div>
+  </div>
+</article>
+
+<style>
+  .story {
+    position: relative;
+    display: flex; flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .story:hover { border-color: color-mix(in srgb, var(--cat) 45%, var(--line)); box-shadow: var(--shadow); }
+  .body { display: flex; flex-direction: column; gap: 10px; padding: 20px; flex: 1; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    font: 600 12px/1 var(--sans); letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--cat); text-decoration: none;
+    padding: 5px 9px; border-radius: 999px;
+    background: color-mix(in srgb, var(--cat) 12%, transparent);
+  }
+  .tag:hover { background: color-mix(in srgb, var(--cat) 20%, transparent); }
+  .tag.city { --cat: var(--cat-local); }
+  .tag.pin { color: var(--accent-ink); background: var(--accent-soft); }
+
+  .headline { font-size: 21px; }
+  .headline a { text-decoration: none; }
+  .headline a:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+  .summary {
+    color: var(--muted); font-size: 16px;
+    display: -webkit-box; -webkit-line-clamp: 4; line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  .meta {
+    margin-top: auto; padding-top: 6px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; color: var(--muted);
+  }
+  .meta :global(.bm) { margin-left: auto; }
+  .source { display: inline-flex; gap: 6px; align-items: baseline; min-width: 0; }
+  .source a { color: var(--ink); font-weight: 600; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .source a:hover { text-decoration: underline; }
+  .also { font-size: 13px; }
+
+  /* Lead story: big headline, optional image, full summary. */
+  .lead .headline { font-size: clamp(28px, 4vw, 40px); }
+  .lead .body { padding: clamp(20px, 3vw, 32px); gap: 14px; }
+  .lead .summary { font-size: 18px; -webkit-line-clamp: 6; line-clamp: 6; color: var(--ink); opacity: 0.85; }
+  /* Without an image the lead gets a soft wash of its category colour instead of empty space. */
+  .lead:not(:has(.media)) {
+    background:
+      radial-gradient(120% 90% at 100% 100%, color-mix(in srgb, var(--cat) 16%, transparent), transparent 60%),
+      var(--surface);
+  }
+  .lead:not(:has(.media)) .body { justify-content: center; }
+  .media { display: block; aspect-ratio: 16 / 9; background: var(--surface-2); }
+  .media img { width: 100%; height: 100%; object-fit: cover; }
+
+  .compact { border-radius: 12px; }
+  .compact .body { padding: 14px 16px; gap: 8px; }
+  .compact .headline { font-size: 17px; }
+</style>

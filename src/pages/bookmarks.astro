@@ -1,0 +1,123 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { CATEGORIES, cities } from '../lib/data';
+
+const labels = Object.fromEntries(CATEGORIES.map((c) => [c.slug, c.label]));
+const cityNames = Object.fromEntries(cities.map((c) => [c.slug, c.name]));
+---
+
+<Layout title="Saved stories" description="Stories you saved for later, kept in this browser only.">
+  <section class="container page-head">
+    <p class="eyebrow">Saved</p>
+    <h1>Saved for later</h1>
+    <p>Saved stories stay in this browser only. Clearing site data, or a private window, removes them.</p>
+  </section>
+
+  <section class="container section first">
+    <div class="grid" data-saved-list data-labels={JSON.stringify({ labels, cityNames })}></div>
+    <div class="empty" data-saved-empty>
+      Nothing saved yet. Tap the bookmark on any story to keep it here.
+    </div>
+  </section>
+
+  <template data-saved-template>
+    <article class="saved">
+      <div class="tags"><a class="tag" data-cat></a><a class="tag city" data-city hidden></a></div>
+      <h2><a data-headline></a></h2>
+      <p class="summary" data-summary></p>
+      <div class="meta">
+        <a class="source" data-source rel="noopener" target="_blank"></a>
+        <span aria-hidden="true">·</span>
+        <span data-read></span>
+        <button type="button" class="bm" aria-pressed="true" title="Remove from saved">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h12a1 1 0 0 1 1 1V21l-7-4.5L5 21V4.5a1 1 0 0 1 1-1Z" /></svg>
+        </button>
+      </div>
+    </article>
+  </template>
+</Layout>
+
+<script>
+  import { installBookmarks, loadBookmarks } from '../scripts/bookmarks';
+
+  const list = document.querySelector<HTMLElement>('[data-saved-list]')!;
+  const { labels, cityNames } = JSON.parse(list.dataset.labels ?? '{}') as {
+    labels: Record<string, string>;
+    cityNames: Record<string, string>;
+  };
+  const empty = document.querySelector<HTMLElement>('[data-saved-empty]')!;
+  const tpl = document.querySelector<HTMLTemplateElement>('[data-saved-template]')!;
+  const safeUrl = (u: string) => (/^https?:\/\//i.test(u) ? u : '#');
+  const safeSlug = (s: string | null) => (s && /^[a-z0-9-]+$/.test(s) ? s : null);
+
+  // Built with textContent / attributes only, so saved data can never inject markup.
+  function render() {
+    const saved = loadBookmarks();
+    list.replaceChildren();
+    for (const s of saved) {
+      const node = tpl.content.cloneNode(true) as DocumentFragment;
+      const card = node.querySelector<HTMLElement>('.saved')!;
+      const cat = safeSlug(s.category) ?? 'general';
+      card.style.setProperty('--cat', `var(--cat-${cat}, var(--cat-general))`);
+
+      const catEl = node.querySelector<HTMLAnchorElement>('[data-cat]')!;
+      catEl.textContent = labels[cat] ?? cat;
+      catEl.href = `/category/${cat}`;
+
+      const region = safeSlug(s.region);
+      if (region) {
+        const cityEl = node.querySelector<HTMLAnchorElement>('[data-city]')!;
+        cityEl.hidden = false;
+        cityEl.textContent = cityNames[region] ?? region;
+        cityEl.href = `/local/${region}`;
+      }
+
+      const h = node.querySelector<HTMLAnchorElement>('[data-headline]')!;
+      h.textContent = s.headline;
+      h.href = /^[a-f0-9]{10}$/.test(s.id) ? `/story/${s.id}` : safeUrl(s.sourceLink);
+
+      const summary = node.querySelector<HTMLElement>('[data-summary]')!;
+      if (s.summary) summary.textContent = s.summary;
+      else summary.remove();
+
+      const src = node.querySelector<HTMLAnchorElement>('[data-source]')!;
+      src.textContent = s.sourceName;
+      src.href = safeUrl(s.sourceLink);
+      node.querySelector('[data-read]')!.textContent = `${Number(s.readTime) || 3} min read`;
+
+      const btn = node.querySelector<HTMLButtonElement>('.bm')!;
+      btn.dataset.bookmark = JSON.stringify(s);
+      btn.setAttribute('aria-label', `Remove “${s.headline}” from saved`);
+      list.append(node);
+    }
+    empty.hidden = saved.length > 0;
+    list.hidden = saved.length === 0;
+  }
+
+  installBookmarks();
+  render();
+  document.addEventListener('gng:bookmarks', render);
+</script>
+
+<style>
+  .first { margin-top: 28px; }
+  .saved {
+    display: flex; flex-direction: column; gap: 10px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px;
+  }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag {
+    font: 600 12px/1 var(--sans); letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--cat); text-decoration: none; padding: 5px 9px; border-radius: 999px;
+    background: color-mix(in srgb, var(--cat) 12%, transparent);
+  }
+  .tag.city { --cat: var(--cat-local); }
+  h2 { font-size: 21px; }
+  h2 a { text-decoration: none; }
+  h2 a:hover { text-decoration: underline; }
+  .summary { color: var(--muted); font-size: 16px; display: -webkit-box; -webkit-line-clamp: 4; line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .meta { margin-top: auto; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+  .meta .bm { margin-left: auto; }
+  .source { color: var(--ink); font-weight: 600; text-decoration: none; }
+  .source:hover { text-decoration: underline; }
+</style>

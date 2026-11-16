@@ -1,0 +1,132 @@
+---
+import StoryCard from './StoryCard.astro';
+import CategoryNav from './CategoryNav.astro';
+import { cities, formatDate, splitDigest, type Digest } from '../lib/data';
+
+interface Props {
+  digest: Digest;
+  isLatest: boolean;
+}
+
+const { digest, isLatest } = Astro.props;
+const { top, global, local } = splitDigest(digest);
+const [lead, ...sideTop] = top;
+const counts: Record<string, number> = {};
+for (const s of digest.stories) if (!s.region) counts[s.category] = (counts[s.category] ?? 0) + 1;
+const localByCity = cities
+  .map((c) => ({ city: c, stories: local.filter((s) => s.region === c.slug) }))
+  .filter((g) => g.stories.length);
+const total = digest.stories.length;
+---
+
+<section class="container intro">
+  <p class="eyebrow">{isLatest ? 'Today’s good news' : 'From the archive'}</p>
+  <h1>{formatDate(digest.date)}</h1>
+  <p class="lede">
+    {total} {total === 1 ? 'story' : 'stories'} worth your time{isLatest ? ', picked this morning' : ''}. Each one takes
+    a minute to skim here, with a link to the full piece.
+  </p>
+</section>
+
+{lead && (
+  <section class="container top" aria-labelledby="top-heading">
+    <h2 id="top-heading" class="visually-hidden">Top 3</h2>
+    <div class="top-grid">
+      <div class="top-lead"><StoryCard story={lead} variant="lead" headingLevel="h2" /></div>
+      {sideTop.length > 0 && (
+        <div class="top-side">
+          {sideTop.map((s) => <StoryCard story={s} headingLevel="h2" />)}
+        </div>
+      )}
+    </div>
+  </section>
+)}
+
+{localByCity.length > 0 && (
+  <section class="container section my-city" data-my-city aria-labelledby="city-heading">
+    <div class="section-head">
+      <h2 id="city-heading">Near you</h2>
+      <a href="/local" data-city-change>Choose your city</a>
+    </div>
+    <div class="city-prompt" data-city-prompt>
+      <p>Pick a city to see its good news here. We only remember the city name, and only in this browser.</p>
+      <div class="city-chips">
+        {localByCity.map((g) => (
+          <a class="btn" href={`/local/${g.city.slug}`} data-set-city={g.city.slug}>{g.city.name} <span class="muted">{g.stories.length}</span></a>
+        ))}
+      </div>
+    </div>
+    {localByCity.map((g) => (
+      <div class="city-block" data-city={g.city.slug} hidden>
+        <p class="city-name">{g.city.name} <a href={`/local/${g.city.slug}`}>See all</a></p>
+        <div class="grid">
+          {g.stories.slice(0, 6).map((s) => <StoryCard story={s} variant="compact" />)}
+        </div>
+      </div>
+    ))}
+  </section>
+)}
+
+<section class="container section" aria-labelledby="cats-heading">
+  <div class="section-head"><h2 id="cats-heading">Browse by topic</h2></div>
+  <CategoryNav counts={counts} />
+</section>
+
+{global.length > 0 && (
+  <section class="container section" aria-labelledby="more-heading">
+    <div class="section-head"><h2 id="more-heading">More good news</h2></div>
+    <div class="grid">
+      {global.map((s) => <StoryCard story={s} />)}
+    </div>
+  </section>
+)}
+
+{!lead && (
+  <section class="container section">
+    <div class="empty">No stories for this day yet. The next digest arrives at 6 AM Toronto time.</div>
+  </section>
+)}
+
+<script>
+  // Show the saved city's block, or the picker if none is saved or it has no stories today.
+  const section = document.querySelector<HTMLElement>('[data-my-city]');
+  if (section) {
+    let city: string | null = null;
+    try {
+      city = localStorage.getItem('gng:city');
+    } catch {}
+    const block = city ? section.querySelector<HTMLElement>(`[data-city="${CSS.escape(city)}"]`) : null;
+    if (block) {
+      block.hidden = false;
+      section.querySelector<HTMLElement>('[data-city-prompt]')!.hidden = true;
+      section.querySelector<HTMLElement>('[data-city-change]')!.textContent = 'Change city';
+    }
+    section.addEventListener('click', (e) => {
+      const a = (e.target as Element).closest<HTMLElement>('[data-set-city]');
+      if (!a) return;
+      try {
+        localStorage.setItem('gng:city', a.dataset.setCity!);
+      } catch {}
+    });
+  }
+</script>
+
+<style>
+  .intro { padding-top: 40px; padding-bottom: 28px; }
+  .intro h1 { font-size: clamp(34px, 6vw, 56px); margin-top: 8px; }
+  .lede { color: var(--muted); font-size: 18px; margin-top: 10px; }
+
+  .top-grid { display: grid; gap: 20px; }
+  @media (min-width: 880px) {
+    .top-grid { grid-template-columns: 1.6fr 1fr; align-items: stretch; }
+    .top-lead { display: grid; }
+  }
+  .top-side { display: grid; gap: 20px; align-content: start; }
+
+  .city-prompt { background: var(--surface-2); border-radius: var(--radius); padding: 20px; }
+  .city-prompt p { color: var(--muted); margin-bottom: 14px; }
+  .city-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .city-name { font: 600 16px/1.3 var(--sans); margin-bottom: 14px; display: flex; gap: 12px; align-items: baseline; }
+  .city-name a { font-size: 14px; color: var(--accent-ink); }
+  .muted { color: var(--muted); font-weight: 500; }
+</style>

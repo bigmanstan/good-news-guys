@@ -1,0 +1,17 @@
+---
+import { bookmarkPayload, type Story } from '../lib/data';
+
+interface Props {
+  story: Story;
+}
+const { story } = Astro.props;
+---
+
+<button type="button" class="bm" data-bookmark={bookmarkPayload(story)} aria-pressed="false" aria-label={`Save “${story.headline}”`} title="Save for later">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h12a1 1 0 0 1 1 1V21l-7-4.5L5 21V4.5a1 1 0 0 1 1-1Z" /></svg>
+</button>
+
+<script>
+  import { installBookmarks } from '../scripts/bookmarks';
+  installBookmarks();
+</script>

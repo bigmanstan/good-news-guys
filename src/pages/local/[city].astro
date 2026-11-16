@@ -1,0 +1,43 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import StoryCard from '../../components/StoryCard.astro';
+import CityPicker from '../../components/CityPicker.astro';
+import { cities, recentStories, relativeDay } from '../../lib/data';
+
+export function getStaticPaths() {
+  return cities.map((c) => ({ params: { city: c.slug }, props: { city: c } }));
+}
+
+const { city } = Astro.props;
+const groups = recentStories((s) => s.region === city.slug);
+const count = groups.reduce((n, g) => n + g.stories.length, 0);
+const counts = Object.fromEntries(
+  cities.map((c) => [c.slug, recentStories((s) => s.region === c.slug).reduce((n, g) => n + g.stories.length, 0)]),
+);
+---
+
+<Layout title={`Good news in ${city.name}`} description={`Positive local stories from ${city.name}, picked daily from local outlets.`}>
+  <section class="container page-head">
+    <p class="eyebrow">Local</p>
+    <h1>{city.name}</h1>
+    <p>{count ? `${count} good ${count === 1 ? 'story' : 'stories'} from local outlets this past week.` : `No good ${city.name} stories this past week yet. Check back tomorrow.`}</p>
+  </section>
+
+  <section class="container section first">
+    {groups.length ? groups.map((g) => (
+      <div class="day-group">
+        <h2>{relativeDay(g.date)}</h2>
+        <div class="grid">{g.stories.map((s) => <StoryCard story={s} />)}</div>
+      </div>
+    )) : <div class="empty">Nothing here yet.</div>}
+  </section>
+
+  <section class="container section">
+    <div class="section-head"><h2>Other cities</h2></div>
+    <CityPicker current={city.slug} counts={counts} />
+  </section>
+</Layout>
+
+<style>
+  .first { margin-top: 28px; }
+</style>

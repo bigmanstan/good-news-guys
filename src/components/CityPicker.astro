@@ -1,0 +1,96 @@
+---
+import { cities } from '../lib/data';
+
+interface Props {
+  current?: string;
+  counts: Record<string, number>;
+}
+const { current, counts } = Astro.props;
+const lookup = cities.map(({ slug, lat, lon }) => ({ slug, lat, lon }));
+---
+
+<div class="picker" data-city-picker data-current={current ?? ''}>
+  <div class="actions">
+    <button type="button" class="btn btn-primary" data-locate>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /><circle cx="12" cy="12" r="7" /></svg>
+      Use my location once
+    </button>
+    {current && <button type="button" class="btn" data-save-current>Make {cities.find((c) => c.slug === current)?.name} my city</button>}
+  </div>
+  <p class="note" data-locate-status aria-live="polite">Your browser tells us roughly where you are, we pick the nearest city on our list, and only that city's name is saved, in this browser.</p>
+  <ul class="list">
+    {cities.map((c) => (
+      <li>
+        <a href={`/local/${c.slug}`} data-pick={c.slug} aria-current={c.slug === current ? 'page' : undefined}>
+          <span>{c.name}</span>
+          <span class="n">{counts[c.slug] ?? 0}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<script define:vars={{ lookup }}>
+  // define:vars scripts run inline (not bundled), so this stays plain JS.
+  const root = document.querySelector('[data-city-picker]');
+  const status = root.querySelector('[data-locate-status]');
+  const saved = (() => { try { return localStorage.getItem('gng:city'); } catch { return null; } })();
+  const remember = (slug) => { try { localStorage.setItem('gng:city', slug); } catch {} };
+
+  const saveBtn = root.querySelector('[data-save-current]');
+  if (saveBtn && saved === root.dataset.current) saveBtn.remove();
+  for (const a of root.querySelectorAll('[data-pick]')) {
+    if (a.dataset.pick === saved) a.classList.add('saved');
+  }
+
+  root.addEventListener('click', (e) => {
+    const pick = e.target.closest('[data-pick]');
+    if (pick) remember(pick.dataset.pick);
+    if (e.target.closest('[data-save-current]')) {
+      remember(root.dataset.current);
+      location.reload();
+    }
+  });
+
+  function km(a, b) {
+    const r = Math.PI / 180;
+    const x = Math.sin(((b.lat - a.lat) * r) / 2) ** 2 +
+      Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(((b.lon - a.lon) * r) / 2) ** 2;
+    return 12742 * Math.asin(Math.sqrt(x));
+  }
+
+  root.querySelector('[data-locate]').addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      status.textContent = 'Your browser does not support location. Pick a city below instead.';
+      return;
+    }
+    status.textContent = 'Finding the nearest city…';
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        // Coordinates never leave this function; only the chosen slug is stored.
+        const here = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        const nearest = lookup.reduce((best, c) => (km(here, c) < km(here, best) ? c : best));
+        remember(nearest.slug);
+        location.href = `/local/${nearest.slug}`;
+      },
+      () => { status.textContent = 'Location was not shared. Pick a city below instead.'; },
+      { maximumAge: 600000, timeout: 10000, enableHighAccuracy: false },
+    );
+  });
+</script>
+
+<style>
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+  .note { color: var(--muted); font-size: 14px; margin: 12px 0 24px; max-width: 62ch; }
+  .list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); }
+  .list a {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface);
+    text-decoration: none; font-weight: 600;
+  }
+  .list a:hover { border-color: var(--cat-local); }
+  .list a[aria-current='page'] { border-color: var(--cat-local); background: color-mix(in srgb, var(--cat-local) 10%, var(--surface)); }
+  .list a:global(.saved) span:first-child::after { content: ' ★'; color: var(--accent); }
+  .n { color: var(--muted); font-weight: 500; font-size: 14px; }
+</style>
