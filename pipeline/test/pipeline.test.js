@@ -106,6 +106,17 @@ test('summarize keeps 2–3 sentences and drops WordPress boilerplate', () => {
   assert.equal(s, 'One thing happened. Then another. And a third!');
 });
 
+test('summarize strips all-caps bylines and scraped menu text', () => {
+  assert.equal(
+    summarize({ title: 'T', description: 'BY THE OPTIMIST DAILY EDITORIAL TEAM You know that feeling. It passes.' }),
+    'You know that feeling. It passes.',
+  );
+  assert.equal(
+    summarize({ title: 'T', description: 'APOD Archive Submissions Index Search Calendar RSS Education About APOD. A nebula glows with new stars.' }),
+    'A nebula glows with new stars.',
+  );
+});
+
 test('summarize drops a cut-off trailing fragment', () => {
   assert.equal(summarize({ title: 'T', description: 'A clinic did a first. Doctors used donor marrow on a patient who received' }), 'A clinic did a first.');
   assert.equal(summarize({ title: 'T', description: 'Doctors used donor marrow on a patient who received' }), 'Doctors used donor marrow on a patient who received…');

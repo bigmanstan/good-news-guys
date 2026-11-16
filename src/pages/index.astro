@@ -1,16 +1,16 @@
 ---
+import Layout from '../layouts/Layout.astro';
+import DigestView from '../components/DigestView.astro';
+import { latest } from '../lib/data';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout>
+  {latest ? (
+    <DigestView digest={latest} isLatest />
+  ) : (
+    <section class="container page-head">
+      <h1>Good news is on its way</h1>
+      <p>The first digest arrives at 6 AM Toronto time.</p>
+    </section>
+  )}
+</Layout>

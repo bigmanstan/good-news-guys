@@ -10,6 +10,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "check": "astro check",
     "digest": "node pipeline/run.js",
     "digest:dry": "node pipeline/run.js --dry-run",
     "review:apply": "node pipeline/apply-review.js",
@@ -19,5 +20,9 @@
     "astro": "^7.4.12",
     "rss-parser": "^3.13.0",
     "sentiment": "^5.0.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "typescript": "^6.0.3"
   }
 }

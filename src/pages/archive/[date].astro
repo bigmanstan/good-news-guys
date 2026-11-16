@@ -1,0 +1,26 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import DigestView from '../../components/DigestView.astro';
+import { digests, formatDate, latest, type Digest } from '../../lib/data';
+
+export function getStaticPaths() {
+  return digests.map((digest) => ({ params: { date: digest.date }, props: { digest } }));
+}
+
+const { digest } = Astro.props as { digest: Digest };
+const i = digests.findIndex((d) => d.date === digest.date);
+const newer = digests[i - 1];
+const older = digests[i + 1];
+---
+
+<Layout title={`Good news for ${formatDate(digest.date)}`} description={`The ${digest.stories.length} good news stories picked on ${formatDate(digest.date)}.`}>
+  <DigestView digest={digest} isLatest={digest.date === latest?.date} />
+  <nav class="container pager" aria-label="Other days">
+    {older ? <a class="btn" href={`/archive/${older.date}`}>← {formatDate(older.date, true)}</a> : <span />}
+    {newer ? <a class="btn" href={`/archive/${newer.date}`}>{formatDate(newer.date, true)} →</a> : <span />}
+  </nav>
+</Layout>
+
+<style>
+  .pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 48px; }
+</style>

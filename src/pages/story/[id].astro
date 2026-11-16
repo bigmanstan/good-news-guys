@@ -1,0 +1,98 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import StoryCard from '../../components/StoryCard.astro';
+import BookmarkButton from '../../components/BookmarkButton.astro';
+import { allStories, categoryLabel, cityName, formatDate, recentStories, type Story } from '../../lib/data';
+
+export function getStaticPaths() {
+  return allStories().map((story) => ({ params: { id: story.id }, props: { story } }));
+}
+
+const { story } = Astro.props as { story: Story };
+const city = cityName(story.region);
+const related = recentStories((s) => s.id !== story.id && (story.region ? s.region === story.region : s.category === story.category && !s.region), 3)
+  .flatMap((g) => g.stories)
+  .slice(0, 3);
+const published = story.publishedAt ? new Date(story.publishedAt) : null;
+---
+
+<Layout title={story.headline} description={story.summary || `${story.headline}, via ${story.sourceName}.`} image={story.image}>
+  <article class="container story" style={`--cat: var(--cat-${story.category}, var(--cat-general))`}>
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href={`/archive/${story.digestDate}`}>{formatDate(story.digestDate)}</a>
+      <span aria-hidden="true">/</span>
+      <a href={`/category/${story.category}`}>{categoryLabel(story.category)}</a>
+      {city && <><span aria-hidden="true">/</span><a href={`/local/${story.region}`}>{city}</a></>}
+    </nav>
+
+    <h1>{story.headline}</h1>
+
+    {story.image && (
+      <figure class="media">
+        <img src={story.image} alt="" referrerpolicy="no-referrer" decoding="async" />
+        <figcaption>Image: {story.sourceName}</figcaption>
+      </figure>
+    )}
+
+    {story.summary ? <p class="summary">{story.summary}</p> : <p class="summary muted">This outlet didn’t include a summary. The full story is one click away.</p>}
+
+    <div class="actions">
+      <a class="btn btn-primary" href={story.sourceLink} rel="noopener" target="_blank">
+        Read the full story at {story.sourceName}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" /></svg>
+      </a>
+      <span class="save"><BookmarkButton story={story} /> Save</span>
+    </div>
+
+    <dl class="facts">
+      <div><dt>Source</dt><dd>{story.sourceName}</dd></div>
+      <div><dt>Read time</dt><dd>{story.readTime} min</dd></div>
+      {published && <div><dt>Published</dt><dd><time datetime={story.publishedAt}>{published.toLocaleDateString('en-CA', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/Toronto' })}</time></dd></div>}
+    </dl>
+
+    {story.alsoCoveredBy.length > 0 && (
+      <div class="also">
+        <h2>Also covered by</h2>
+        <ul>
+          {story.alsoCoveredBy.map((o) => <li><a href={o.link} rel="noopener" target="_blank">{o.name}</a></li>)}
+        </ul>
+      </div>
+    )}
+  </article>
+
+  {related.length > 0 && (
+    <section class="container section">
+      <div class="section-head">
+        <h2>{city ? `More from ${city}` : `More ${categoryLabel(story.category).toLowerCase()} news`}</h2>
+        <a href={city ? `/local/${story.region}` : `/category/${story.category}`}>See all</a>
+      </div>
+      <div class="grid">{related.map((s) => <StoryCard story={s} />)}</div>
+    </section>
+  )}
+</Layout>
+
+<style>
+  .story { max-width: 760px; padding-top: 32px; }
+  .crumbs { display: flex; flex-wrap: wrap; gap: 8px; font-size: 14px; color: var(--muted); margin-bottom: 18px; }
+  .crumbs a { color: var(--muted); text-decoration: none; }
+  .crumbs a:hover { color: var(--ink); text-decoration: underline; }
+  .crumbs a:nth-of-type(2) { color: var(--cat); font-weight: 600; }
+  h1 { font-size: clamp(30px, 5vw, 46px); }
+  .media { margin: 28px 0 0; }
+  .media img { width: 100%; border-radius: var(--radius); background: var(--surface-2); aspect-ratio: 16 / 9; object-fit: cover; }
+  figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .summary { font: 20px/1.6 var(--serif); margin-top: 24px; }
+  .muted { color: var(--muted); }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 28px; }
+  .actions svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .save { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); font-size: 15px; font-weight: 600; }
+  .save :global(.bm) { margin: 0; border: 1px solid var(--line); width: 42px; height: 42px; }
+  .facts { display: flex; flex-wrap: wrap; gap: 28px; margin: 36px 0 0; padding-top: 20px; border-top: 1px solid var(--line); }
+  .facts dt { font-size: 13px; color: var(--muted); }
+  .facts dd { margin: 2px 0 0; font-weight: 600; }
+  .also { margin-top: 28px; }
+  .also h2 { font: 600 15px/1.3 var(--sans); color: var(--muted); }
+  .also ul { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .also a { display: inline-block; padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; text-decoration: none; font-size: 15px; }
+  .also a:hover { border-color: var(--muted); }
+</style>

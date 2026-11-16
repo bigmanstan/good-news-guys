@@ -1,0 +1,10 @@
+{
+  "name": "Good News Guys",
+  "short_name": "Good News",
+  "description": "A short daily digest of genuinely good news.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbf8f1",
+  "theme_color": "#e8930c",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

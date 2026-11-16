@@ -9,7 +9,17 @@ const BOILERPLATE = [
 function clean(text) {
   let t = text;
   for (const re of BOILERPLATE) t = t.replace(re, '').trim();
+  // All-caps byline at the start: "BY THE OPTIMIST DAILY EDITORIAL TEAM You know…"
+  t = t.replace(/^BY [A-Z0-9 .,'&-]+?\s+(?=[A-Z][a-z])/, '');
   return t;
+}
+
+/** Menu/link text scraped into a description: mostly Capitalized Words, little else. */
+function looksLikeNav(sentence) {
+  const words = sentence.split(/\s+/).filter((w) => /[a-z]/i.test(w));
+  if (words.length < 5) return false;
+  const caps = words.filter((w) => /^[A-Z]/.test(w)).length;
+  return caps / words.length > 0.7;
 }
 
 export function splitSentences(text) {
@@ -23,7 +33,8 @@ export function splitSentences(text) {
 export function summarize(story, { maxChars = 320 } = {}) {
   const source = clean(story.description || story.fullText || '');
   if (!source) return '';
-  const sentences = splitSentences(source);
+  const sentences = splitSentences(source).filter((s) => !looksLikeNav(s));
+  if (!sentences.length) return '';
   const out = [];
   for (const s of sentences) {
     if (out.length >= 3) break;

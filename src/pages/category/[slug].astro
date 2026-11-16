@@ -1,0 +1,39 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import StoryCard from '../../components/StoryCard.astro';
+import CategoryNav from '../../components/CategoryNav.astro';
+import { CATEGORIES, categoryLabel, recentStories, relativeDay } from '../../lib/data';
+
+export function getStaticPaths() {
+  return CATEGORIES.map((c) => ({ params: { slug: c.slug } }));
+}
+
+const { slug } = Astro.params;
+const label = categoryLabel(slug);
+const groups = recentStories((s) => s.category === slug);
+const count = groups.reduce((n, g) => n + g.stories.length, 0);
+---
+
+<Layout title={`${label} good news`} description={`The latest positive ${label.toLowerCase()} stories, picked daily.`}>
+  <section class="container page-head" style={`--cat: var(--cat-${slug})`}>
+    <p class="eyebrow">Topic</p>
+    <h1>{label}</h1>
+    <p>{count ? `${count} ${count === 1 ? 'story' : 'stories'} from the past week.` : 'Nothing in the past week yet. Check back tomorrow.'}</p>
+  </section>
+
+  <div class="container nav-row"><CategoryNav current={slug} /></div>
+
+  <section class="container section">
+    {groups.length ? groups.map((g) => (
+      <div class="day-group">
+        <h2>{relativeDay(g.date)}</h2>
+        <div class="grid">{g.stories.map((s) => <StoryCard story={s} />)}</div>
+      </div>
+    )) : <div class="empty">No {label.toLowerCase()} stories yet.</div>}
+  </section>
+</Layout>
+
+<style>
+  .nav-row { margin-top: 20px; }
+  .section { margin-top: 40px; }
+</style>
