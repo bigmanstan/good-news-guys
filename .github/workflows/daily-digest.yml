@@ -60,6 +60,10 @@ jobs:
             echo "No review queue for $DATE."
             exit 0
           fi
+          if git ls-files --error-unmatch "$FILE" >/dev/null 2>&1 && git diff --quiet HEAD -- "$FILE"; then
+            echo "Review queue for $DATE is unchanged."
+            exit 0
+          fi
           BRANCH="review/$DATE"
           git switch -c "$BRANCH"
           git add "$FILE"
