@@ -32,6 +32,8 @@ Extra flags for `node pipeline/run.js`: `--date YYYY-MM-DD`, `--no-local`, `--on
 
 **GitHub setup.** In the repo's Settings → Actions → General, set workflow permissions to "Read and write" and tick "Allow GitHub Actions to create and approve pull requests". Otherwise the daily job can't push the digest or open the review PR.
 
+**Deploy.** Cloudflare Pages is connected to this repo (preset Astro, build `npm run build`, output `dist`, `NODE_VERSION=22`). Every push to `main`, including the bot's daily digest commit, rebuilds the site.
+
 ## How a day runs
 
 1. **6 AM Toronto time**: a GitHub Actions workflow starts a Node script.
