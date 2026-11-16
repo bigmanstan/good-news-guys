@@ -48,6 +48,11 @@ if (args.scheduled) {
   }
 }
 
+/** Headline reduced to its first words, so small edits between cities still match. */
+function wireKey(title) {
+  return title.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(/\s+/).filter(Boolean).slice(0, 8).join(' ');
+}
+
 function daysBefore(d, n) {
   return new Date(Date.parse(`${d}T12:00:00Z`) - n * 864e5).toISOString().slice(0, 10);
 }
@@ -76,18 +81,20 @@ if (!results.length) {
   process.exit(1);
 }
 
-// 2. Normalize, and skip anything already in the last 3 digests
+// 2. Normalize, and skip anything already in the last 5 digests
 const seen = new Set();
-for (let n = 1; n <= 3; n++) {
+for (let n = 1; n <= 5; n++) {
   const past = await readJson(path('data', 'digests', `${daysBefore(date, n)}.json`));
   for (const s of past?.stories ?? []) seen.add(s.id);
 }
 const maxAgeMs = scoringCfg.maxAgeHours * 36e5;
+// Local feeds publish less often, so their stories may be a little older.
+const localMaxAgeMs = (scoringCfg.localMaxAgeHours ?? scoringCfg.maxAgeHours) * 36e5;
 const now = Date.now();
-const stats = { raw: 0, stale: 0, repeat: 0, blocked: 0, publish: 0, review: 0, reject: 0 };
+const stats = { wire: 0, raw: 0, stale: 0, repeat: 0, blocked: 0, publish: 0, review: 0, reject: 0 };
 const blockedTerms = {};
 
-const scorer = createScorer(scoringCfg);
+const scorer = createScorer(scoringCfg, citiesCfg.cities);
 const byId = new Set();
 const fresh = [];
 
@@ -103,10 +110,25 @@ for (const { source, items } of results) {
     const item = normalizeItem(raw, source);
     if (!item || byId.has(item.id)) continue;
     byId.add(item.id);
-    if (item.publishedAt && now - Date.parse(item.publishedAt) > maxAgeMs) { stats.stale++; continue; }
+    if (item.publishedAt && now - Date.parse(item.publishedAt) > (item.region ? localMaxAgeMs : maxAgeMs)) { stats.stale++; continue; }
     if (seen.has(item.id)) { stats.repeat++; continue; }
     // 3a. Blocklist on the headline before spending a page fetch on it
     if (!isBlocked(item)) fresh.push(item);
+  }
+}
+
+// The same headline in two cities' feeds is national wire copy, not local news.
+const regionsByTitle = new Map();
+for (const item of fresh) {
+  if (!item.region) continue;
+  const key = wireKey(item.title);
+  regionsByTitle.set(key, (regionsByTitle.get(key) ?? new Set()).add(item.region));
+}
+for (const item of fresh) {
+  if (item.region && regionsByTitle.get(wireKey(item.title)).size > 1) {
+    item.wire = true;
+    item.region = null;
+    stats.wire++;
   }
 }
 
@@ -153,7 +175,7 @@ const reviewFile = mergeReview(await readJson(reviewPath), review.filter((s) => 
 stats.publish = publish.length;
 stats.review = reviewFile.items.filter((i) => !i.decision).length;
 
-console.log(`Items: ${stats.raw} raw, ${stats.stale} too old, ${stats.repeat} already published, ${stats.blocked} blocklisted, ${stats.reject} scored negative`);
+console.log(`Items: ${stats.raw} raw, ${stats.stale} too old, ${stats.repeat} already published, ${stats.blocked} blocklisted, ${stats.reject} scored negative, ${stats.wire} wire copies moved out of local`);
 console.log(`Result: ${digest.stories.length} stories in digest (${stats.publish} new), ${stats.review} waiting for review${reviewDropped ? ` (${reviewDropped} weaker ones dropped)` : ''}`);
 const topTerms = Object.entries(blockedTerms).sort((a, b) => b[1] - a[1]).slice(0, 10);
 if (topTerms.length) console.log(`Filtered out by: ${topTerms.map(([t, n]) => `${t} (${n})`).join(', ')}`);

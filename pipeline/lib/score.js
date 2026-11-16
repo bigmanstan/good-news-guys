@@ -6,7 +6,7 @@ function escapeRegex(s) {
 }
 
 /** Build the filter + scorer from config/scoring.json. */
-export function createScorer(config) {
+export function createScorer(config, cities = []) {
   const sentiment = new Sentiment();
   const extras = { ...config.boost, ...config.penalty };
   const t = config.thresholds;
@@ -20,6 +20,22 @@ export function createScorer(config) {
   const sportsRe = config.sportsTerms?.length
     ? new RegExp(`(?<![\\w'])(${config.sportsTerms.map(escapeRegex).join('|')})(?![\\w'])`, 'gi')
     : null;
+
+  // region slug -> matcher for the city's name and aliases ("Toronto", "GTA", ...)
+  const cityRes = new Map(cities.map((c) => [
+    c.slug,
+    new RegExp(`(?<![\w'])(${[c.name, ...(c.aliases ?? [])].map(escapeRegex).join('|')})(?![\w])`, 'i'),
+  ]));
+
+  const dullRe = config.dullTerms?.length
+    ? new RegExp(`(?<![\w'])(${config.dullTerms.map(escapeRegex).join('|')})(?![\w])`, 'i')
+    : null;
+
+  /** A local story that actually names its city, and isn't wire copy run in several cities. */
+  function namesItsCity(story) {
+    if (!story.region || story.wire) return false;
+    return cityRes.get(story.region)?.test(`${story.title} ${story.description}`) ?? false;
+  }
 
   /** How many different sports terms appear in the headline + description. */
   function sportsHits(story) {
@@ -68,12 +84,18 @@ export function createScorer(config) {
     const label = positivity >= 0.6 ? 'positive' : positivity <= 0.4 ? 'negative' : 'neutral';
     const noNegatives = !title.negative.length && !(desc?.negative.length);
 
+    const dull = dullRe?.test(`${story.title} ${story.description}`) ?? false;
+
     let decision = 'reject';
     if (positivity >= t.publishPositivity && confidence >= t.publishConfidence) decision = 'publish';
-    else if (story.neutralOk && positivity >= 0.5 && noNegatives) decision = 'publish';
+    else if (story.neutralOk && !story.wire && !dull && positivity >= 0.5 && noNegatives) decision = 'publish';
+    // Local news is rarely gushing. A calm story about the reader's own city is still worth showing.
+    else if (desc && !dull && namesItsCity(story) && positivity >= (t.localPublishPositivity ?? 1) && noNegatives) decision = 'publish';
     else if (positivity >= t.reviewPositivity) decision = 'review';
     // A headline with no description needs two positive words, not one stray "win".
     if (decision === 'publish' && !desc && !story.neutralOk && new Set(title.positive).size < 2) decision = 'review';
+    // A news desk's local feed also carries world news. If the story never names the city, a person checks it.
+    if (decision === 'publish' && story.region && !story.neutralOk && cityRes.size && !namesItsCity(story)) decision = 'review';
     // Google News gives headlines only and links to a redirect, so a person always checks these.
     if (decision === 'publish' && story.aggregator) decision = 'review';
 

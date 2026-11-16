@@ -1,11 +1,16 @@
 {
   "_help": "blocklist: any match (whole word or phrase, case-insensitive) rejects the story outright. boost/penalty: extra word scores fed to the sentiment scorer (AFINN scale, -5 to 5). thresholds: positivity is 0-1, confidence is 0-1.",
   "maxAgeHours": 36,
+  "_localHelp": "Local (city) feeds are quieter, so they get a longer window and a gentler bar. localMaxAgeHours: how old a local story may be. thresholds.localPublishPositivity: a local story that names its city and has no negative words publishes at this score. Stories that show up in two or more cities' feeds are national wire copy and get neither.",
+  "localMaxAgeHours": 84,
+  "_dullHelp": "dullTerms: politics and officialdom. A story with one of these can still publish if it is clearly positive, but never through the gentler neutral rules.",
+  "dullTerms": ["mayor", "mayoral", "councillor", "councillors", "council", "alderman", "alderpeople", "conservatives", "liberals", "ndp", "democrats", "republicans", "dsa", "premier", "minister", "ministers", "governor", "senator", "mpp", "mla", "party", "caucus", "campaign", "testifies", "testimony", "trial", "court", "jail", "jails", "budget", "tax", "taxes", "salary", "tenants", "landlord", "landlords", "union", "bylaw", "zoning", "forbes"],
   "reviewLimit": 30,
   "thresholds": {
     "publishPositivity": 0.62,
     "publishConfidence": 0.35,
     "reviewPositivity": 0.55,
+    "localPublishPositivity": 0.5,
     "curatedBonus": 0.1,
     "headlineOnlyConfidence": 0.6
   },
@@ -24,7 +29,7 @@
   "blockedOutlets": ["UB - Universitat de Barcelona"],
   "_sportsHelp": "A story is skipped as sports when its headline + description contain at least sportsThreshold different terms from this list. Team names are for the cities in cities.json.",
   "sportsThreshold": 2,
-  "sportsTerms": [
+  "sportsTerms": ["curling", "rugby", "nationals", "quins", "harlequins", "gloucester", "saracens", "bears", "rangers", "stadium", "captain", 
     "scored", "scores", "goals", "assists", "period", "inning", "innings", "quarter", "halftime", "puck", "rebounds", "touchdown", "field goal",
     "goaltender", "goalie", "defenceman", "defenseman", "forward", "striker", "midfielder", "quarterback", "pitcher", "rookie", "coach", "roster",
     "season", "playoff", "playoffs", "rankings", "standings", "win over", "victory over", "comeback win", "game", "games", "match", "fixture", "league",
@@ -60,7 +65,7 @@
   "penalty": {
     "warns": -2, "warning": -2, "crisis": -3, "threat": -2, "threatens": -2, "decline": -2, "declining": -2,
     "shortage": -2, "cuts": -2, "fears": -2, "risk": -1, "injured": -3, "injuries": -3, "victims": -3, "police": -1,
-    "protest": -2, "strike": -3, "tariffs": -2, "inflation": -2, "closure": -2, "closes": -1, "extinct": -2, "extinction": -2
+    "protest": -2, "strike": -3, "tariffs": -2, "inflation": -2, "closure": -2, "closes": -1, "extinct": -2, "extinction": -2, "hungry": -2, "hunger": -2, "recalled": -2, "recall": -2, "probe": -2, "deepfakes": -2, "disinformation": -3, "homelessness": -1, "takeover": -1, "layoffs": -3, "evicted": -2, "eviction": -2, "lawsuit": -2, "sues": -2, "delays": -1, "outage": -2
   },
   "categories": {
     "science":     ["scientists", "researchers", "study", "discovery", "physics", "chemistry", "biology", "fossil", "genome", "research"],
