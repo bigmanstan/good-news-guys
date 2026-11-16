@@ -1,0 +1,61 @@
+{
+  "_help": "One feed per line. category: default category for the feed. trust: 1-5, the higher source wins when stories are merged. curated: true for feeds that only publish good news (they get a scoring boost). neutralOk: true lets neutral stories with no negative words through, for discovery-heavy feeds. enabled: false switches a feed off without deleting it. region: city slug for local feeds (must match config/cities.json), otherwise null.",
+  "feeds": [
+    { "id": "gnn",          "name": "Good News Network",       "url": "https://www.goodnewsnetwork.org/feed/",                              "category": "general",     "region": null, "trust": 3, "curated": true },
+    { "id": "positive",     "name": "Positive News",           "url": "https://www.positive.news/feed/",                                    "category": "general",     "region": null, "trust": 4, "curated": true, "enabled": false, "note": "returns 403 to bots (2026-11-16)" },
+    { "id": "rtbc",         "name": "Reasons to be Cheerful",  "url": "https://reasonstobecheerful.world/feed/",                            "category": "general",     "region": null, "trust": 4, "curated": true },
+    { "id": "optimist",     "name": "The Optimist Daily",      "url": "https://www.optimistdaily.com/feed/",                                "category": "general",     "region": null, "trust": 3, "curated": true },
+    { "id": "sciencedaily", "name": "ScienceDaily",            "url": "https://www.sciencedaily.com/rss/top/science.xml",                   "category": "science",     "region": null, "trust": 4, "curated": false, "neutralOk": true },
+    { "id": "nasa",         "name": "NASA",                    "url": "https://www.nasa.gov/feed/",                                         "category": "space",       "region": null, "trust": 5, "curated": false, "neutralOk": true },
+    { "id": "bbc-sci",      "name": "BBC News",                "url": "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml",      "category": "science",     "region": null, "trust": 5, "curated": false },
+    { "id": "guardian-env", "name": "The Guardian",            "url": "https://www.theguardian.com/environment/rss",                        "category": "environment", "region": null, "trust": 5, "curated": false },
+    { "id": "smithsonian",  "name": "Smithsonian Magazine",    "url": "https://www.smithsonianmag.com/rss/latest_articles/",                "category": "culture",     "region": null, "trust": 4, "curated": false },
+    { "id": "mongabay",     "name": "Mongabay",                "url": "https://news.mongabay.com/feed/",                                    "category": "environment", "region": null, "trust": 4, "curated": false },
+
+    { "id": "cbc-toronto",        "name": "CBC News",           "url": "https://www.cbc.ca/webfeed/rss/rss-canada-toronto", "category": "local", "region": "toronto",   "trust": 5, "enabled": false, "note": "RSS endpoint times out (2026-11-16)" },
+    { "id": "citynews-toronto",   "name": "CityNews Toronto",   "url": "https://toronto.citynews.ca/feed/",                 "category": "local", "region": "toronto",   "trust": 4 },
+    { "id": "global-toronto",     "name": "Global News",        "url": "https://globalnews.ca/toronto/feed/",               "category": "local", "region": "toronto",   "trust": 4 },
+    { "id": "star-gta",           "name": "Toronto Star",       "url": "https://www.thestar.com/search/?f=rss&t=article&c=news/gta*&l=50&s=start_time&sd=desc", "category": "local", "region": "toronto", "trust": 4 },
+    { "id": "cp24",               "name": "CP24",               "url": "https://www.cp24.com/arc/outboundfeeds/rss/?outputType=xml", "category": "local", "region": "toronto", "trust": 4 },
+    { "id": "narcity-toronto",    "name": "Narcity",            "url": "https://www.narcity.com/feeds/toronto.rss",         "category": "local", "region": "toronto",   "trust": 3 },
+    { "id": "dailyhive-toronto",  "name": "Daily Hive",         "url": "https://dailyhive.com/feed/toronto",                "category": "local", "region": "toronto",   "trust": 3 },
+    { "id": "insauga",            "name": "insauga",            "url": "https://www.insauga.com/feed/",                     "category": "local", "region": "toronto",   "trust": 3 },
+
+    { "id": "citynews-montreal",  "name": "CityNews Montreal",  "url": "https://montreal.citynews.ca/feed/",                "category": "local", "region": "montreal",  "trust": 4 },
+    { "id": "global-montreal",    "name": "Global News",        "url": "https://globalnews.ca/montreal/feed/",              "category": "local", "region": "montreal",  "trust": 4 },
+    { "id": "mtlblog",            "name": "MTL Blog",           "url": "https://www.mtlblog.com/feeds/feed.rss",            "category": "local", "region": "montreal",  "trust": 3 },
+    { "id": "cultmtl",            "name": "Cult MTL",           "url": "https://www.cultmtl.com/feed/",                     "category": "local", "region": "montreal",  "trust": 3 },
+
+    { "id": "citynews-vancouver", "name": "CityNews Vancouver", "url": "https://vancouver.citynews.ca/feed/",               "category": "local", "region": "vancouver", "trust": 4 },
+    { "id": "global-bc",          "name": "Global News",        "url": "https://globalnews.ca/bc/feed/",                    "category": "local", "region": "vancouver", "trust": 4 },
+    { "id": "via",                "name": "Vancouver Is Awesome", "url": "https://www.vancouverisawesome.com/rss",          "category": "local", "region": "vancouver", "trust": 3 },
+    { "id": "nsnews",             "name": "North Shore News",   "url": "https://www.nsnews.com/rss",                        "category": "local", "region": "vancouver", "trust": 3 },
+    { "id": "dailyhive-vancouver","name": "Daily Hive",         "url": "https://dailyhive.com/feed/vancouver",              "category": "local", "region": "vancouver", "trust": 3 },
+
+    { "id": "citynews-calgary",   "name": "CityNews Calgary",   "url": "https://calgary.citynews.ca/feed/",                 "category": "local", "region": "calgary",   "trust": 4 },
+    { "id": "global-calgary",     "name": "Global News",        "url": "https://globalnews.ca/calgary/feed/",               "category": "local", "region": "calgary",   "trust": 4 },
+    { "id": "calgary-herald",     "name": "Calgary Herald",     "url": "https://calgaryherald.com/feed",                    "category": "local", "region": "calgary",   "trust": 4 },
+    { "id": "livewire-calgary",   "name": "LiveWire Calgary",   "url": "https://livewirecalgary.com/feed/",                 "category": "local", "region": "calgary",   "trust": 3 },
+    { "id": "dailyhive-calgary",  "name": "Daily Hive",         "url": "https://dailyhive.com/feed/calgary",                "category": "local", "region": "calgary",   "trust": 3 },
+
+    { "id": "citynews-ottawa",    "name": "CityNews Ottawa",    "url": "https://ottawa.citynews.ca/feed/",                  "category": "local", "region": "ottawa",    "trust": 4 },
+    { "id": "global-ottawa",      "name": "Global News",        "url": "https://globalnews.ca/ottawa/feed/",                "category": "local", "region": "ottawa",    "trust": 4 },
+    { "id": "ottawa-citizen",     "name": "Ottawa Citizen",     "url": "https://ottawacitizen.com/feed",                    "category": "local", "region": "ottawa",    "trust": 4 },
+
+    { "id": "gothamist",          "name": "Gothamist",          "url": "https://gothamist.com/feed",                        "category": "local", "region": "new-york",  "trust": 4 },
+    { "id": "amny",               "name": "amNewYork",          "url": "https://www.amny.com/feed/",                        "category": "local", "region": "new-york",  "trust": 3 },
+    { "id": "thecity",            "name": "THE CITY",           "url": "https://www.thecity.nyc/feed/",                     "category": "local", "region": "new-york",  "trust": 4 },
+    { "id": "brooklyn-paper",     "name": "Brooklyn Paper",     "url": "https://www.brooklynpaper.com/feed/",               "category": "local", "region": "new-york",  "trust": 3 },
+    { "id": "secret-nyc",         "name": "Secret NYC",         "url": "https://secretnyc.co/feed/",                        "category": "local", "region": "new-york",  "trust": 2 },
+
+    { "id": "suntimes",           "name": "Chicago Sun-Times",  "url": "https://chicago.suntimes.com/rss/index.xml",        "category": "local", "region": "chicago",   "trust": 4 },
+    { "id": "blockclub",          "name": "Block Club Chicago", "url": "https://blockclubchicago.org/feed/",                "category": "local", "region": "chicago",   "trust": 4 },
+    { "id": "wttw",               "name": "WTTW News",          "url": "https://news.wttw.com/rss.xml",                     "category": "local", "region": "chicago",   "trust": 4 },
+    { "id": "secret-chicago",     "name": "Secret Chicago",     "url": "https://secretchicago.com/feed/",                   "category": "local", "region": "chicago",   "trust": 2 },
+
+    { "id": "bbc-london",         "name": "BBC News",           "url": "https://feeds.bbci.co.uk/news/england/london/rss.xml", "category": "local", "region": "london", "trust": 5 },
+    { "id": "standard-london",    "name": "The Standard",       "url": "https://www.standard.co.uk/news/london/rss",        "category": "local", "region": "london",    "trust": 4 },
+    { "id": "londonist",          "name": "Londonist",          "url": "https://londonist.com/feed",                        "category": "local", "region": "london",    "trust": 3 },
+    { "id": "secret-london",      "name": "Secret London",      "url": "https://secretldn.com/feed/",                       "category": "local", "region": "london",    "trust": 2 }
+  ]
+}

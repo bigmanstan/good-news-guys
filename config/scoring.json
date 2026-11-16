@@ -1,0 +1,75 @@
+{
+  "_help": "blocklist: any match (whole word or phrase, case-insensitive) rejects the story outright. boost/penalty: extra word scores fed to the sentiment scorer (AFINN scale, -5 to 5). thresholds: positivity is 0-1, confidence is 0-1.",
+  "maxAgeHours": 36,
+  "reviewLimit": 30,
+  "thresholds": {
+    "publishPositivity": 0.62,
+    "publishConfidence": 0.35,
+    "reviewPositivity": 0.55,
+    "curatedBonus": 0.1,
+    "headlineOnlyConfidence": 0.6
+  },
+  "_skipHelp": "skipPatterns are regular expressions tested against the headline (case-insensitive). They catch topics that aren't news we want, such as sports results, spam and listicles, rather than negative news.",
+  "skipPatterns": [
+    "\\b(nhl|nfl|nba|wnba|mlb|mls|cfl|ahl|ohl|whl|nsl|ncaa|epl|premier league|super league|champions league)\\b",
+    "\\b(game recap|game preview|highlights|playoffs?|touchdowns?|hat trick|goal streak|point streak|scores? twice|grey cup|stanley cup|super bowl|world series|draft lottery|free agents?|skid|standings)\\b",
+    "\\b(vs\\.?|v\\.)\\s",
+    "\\b(coach|quarterback|goalie|rookie|roster|lineup|straight (games?|wins?)|game-winner|streak|draw at|home win|clutch|overtime|dunk|hoops|volleyball|basketball|soccer|hockey|baseball)\\b",
+    "^[^,]+ \\d+, [^:]+ \\d+:",
+    "\\b\\d{1,3}-\\d{1,3}\\b",
+    "live ?stream|watch live|live free|free live|on tv coverage|\\[\\[|[\\uFF01-\\uFF5E]",
+    "^good news in history",
+    "\\b(win|won) (tickets|a trip)|giveaway|contest|things to do|homes for sale|weather forecast|accuweather|best deals|horoscope"
+  ],
+  "blockedOutlets": ["UB - Universitat de Barcelona"],
+  "_sportsHelp": "A story is skipped as sports when its headline + description contain at least sportsThreshold different terms from this list. Team names are for the cities in cities.json.",
+  "sportsThreshold": 2,
+  "sportsTerms": [
+    "scored", "scores", "goals", "assists", "period", "inning", "innings", "quarter", "halftime", "puck", "rebounds", "touchdown", "field goal",
+    "goaltender", "goalie", "defenceman", "defenseman", "forward", "striker", "midfielder", "quarterback", "pitcher", "rookie", "coach", "roster",
+    "season", "playoff", "playoffs", "rankings", "standings", "win over", "victory over", "comeback win", "game", "games", "match", "fixture", "league",
+    "maple leafs", "leafs", "raptors", "blue jays", "argonauts", "argos", "toronto fc", "marlies", "tempo",
+    "canadiens", "habs", "alouettes", "cf montreal",
+    "canucks", "whitecaps", "bc lions",
+    "flames", "stampeders", "wranglers", "oilers", "elks",
+    "senators", "redblacks", "67's",
+    "knicks", "yankees", "mets", "islanders", "ny rangers", "new york rangers",
+    "bulls", "blackhawks", "cubs", "white sox", "chicago bears",
+    "arsenal", "chelsea", "tottenham", "west ham", "fulham", "crystal palace", "brentford",
+    "penguins", "bruins", "capitals", "golden knights", "ducks", "timberwolves", "celtics", "lakers"
+  ],
+  "blocklist": [
+    "killed", "kills", "killing", "murder", "murdered", "homicide", "shooting", "shot dead", "stabbing", "stabbed",
+    "dead", "dies", "died", "death toll", "fatal", "fatally", "suicide", "overdose",
+    "war", "airstrike", "missile", "bombing", "terror", "terrorist", "hostage", "massacre", "genocide", "invasion",
+    "rape", "sexual assault", "abuse", "trafficking", "kidnapped", "arrested", "charged with", "sentenced", "manslaughter",
+    "crash", "collision", "wildfire", "earthquake", "hurricane", "flooding", "evacuation",
+    "suspect", "suspects", "robbery", "assault", "assaulted", "stolen", "carjacking", "break-in", "gunfire", "firearm",
+    "police say", "investigation", "passes away", "passed away", "obituary", "funeral", "mourn", "mourning", "grounded", "lockdown", "missing person", "amber alert", "blaze", "firefighters", "injured", "hit-and-run",
+    "lawsuit", "scandal", "layoffs", "recession", "bankruptcy", "outbreak", "pandemic",
+    "trump", "election", "impeachment"
+  ],
+  "boost": {
+    "breakthrough": 3, "milestone": 2, "record-breaking": 2, "restored": 2, "restoration": 2, "rescued": 3, "rescue": 2,
+    "reunited": 3, "recovered": 2, "recovery": 2, "thriving": 3, "rebound": 2, "comeback": 2, "volunteers": 2, "volunteer": 2,
+    "donated": 2, "donates": 2, "kindness": 3, "cure": 3, "cured": 3, "discovery": 2, "discovered": 1, "first-ever": 2,
+    "renewable": 2, "solar": 1, "rewilding": 3, "reforestation": 3, "endangered": 1, "hatched": 2, "hatchlings": 2,
+    "celebrates": 2, "celebrating": 2, "inspiring": 3, "hope": 2, "hopeful": 3, "uplifting": 3, "heartwarming": 3,
+    "graduates": 2, "scholarship": 2, "affordable": 1, "free": 1, "opens": 1, "launches": 1, "wins": 2, "award": 2
+  },
+  "penalty": {
+    "warns": -2, "warning": -2, "crisis": -3, "threat": -2, "threatens": -2, "decline": -2, "declining": -2,
+    "shortage": -2, "cuts": -2, "fears": -2, "risk": -1, "injured": -3, "injuries": -3, "victims": -3, "police": -1,
+    "protest": -2, "strike": -3, "tariffs": -2, "inflation": -2, "closure": -2, "closes": -1, "extinct": -2, "extinction": -2
+  },
+  "categories": {
+    "science":     ["scientists", "researchers", "study", "discovery", "physics", "chemistry", "biology", "fossil", "genome", "research"],
+    "space":       ["nasa", "space", "telescope", "astronaut", "planet", "galaxy", "moon", "mars", "orbit", "asteroid", "esa"],
+    "health":      ["health", "cancer", "vaccine", "treatment", "patients", "medical", "disease", "therapy", "mental health", "hospital"],
+    "environment": ["climate", "solar", "renewable", "wind", "forest", "ocean", "reef", "emissions", "rewilding", "conservation", "wildlife"],
+    "animals":     ["dog", "cat", "bird", "whale", "turtle", "elephant", "puppy", "kitten", "species", "zoo", "sanctuary"],
+    "community":   ["volunteers", "neighbours", "neighbors", "donated", "charity", "kindness", "community", "students", "school", "library"],
+    "tech":        ["app", "robot", "ai", "battery", "startup", "engineers", "invention", "software", "chip"],
+    "culture":     ["museum", "art", "artist", "music", "film", "book", "festival", "history", "archaeologists"]
+  }
+}
