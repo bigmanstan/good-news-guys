@@ -64,6 +64,30 @@ test('neutralOk feeds publish neutral discoveries with no negative words', () =>
   assert.equal(scorer.score({ ...base, neutralOk: true, title: 'Glacier ice loss worsens in warming crisis' }).decision, 'reject');
 });
 
+const cities = JSON.parse(readFileSync(new URL('../../config/cities.json', import.meta.url))).cities;
+const localScorer = createScorer(scoring, cities);
+
+test('a calm local story publishes when it names its city', () => {
+  const s = { ...base, region: 'london', title: 'Spanish galleon sails through Tower Bridge', description: 'The replica ship passed through central London on Sunday morning.' };
+  assert.equal(localScorer.score(s).decision, 'publish');
+  // Same story as wire copy, or without the city, does not get the local pass.
+  assert.notEqual(localScorer.score({ ...s, wire: true, region: null }).decision, 'publish');
+  assert.notEqual(localScorer.score({ ...s, description: 'The replica ship passed through on Sunday morning.' }).decision, 'publish');
+});
+
+test('local politics and negative local stories do not get the local pass', () => {
+  const council = { ...base, region: 'ottawa', title: 'Ottawa mayor and councillors could receive salary bumps', description: 'A report goes to committee next week in Ottawa.' };
+  assert.notEqual(localScorer.score(council).decision, 'publish');
+  const bad = { ...base, region: 'toronto', title: 'Toronto transit delays frustrate riders', description: 'Commuters in Toronto faced another outage.' };
+  assert.notEqual(localScorer.score(bad).decision, 'publish');
+});
+
+test('a positive story in a local news feed that never names the city goes to review', () => {
+  const s = { ...base, region: 'toronto', title: 'Volunteers rescued 200 sea turtles and the hatchlings are thriving', description: 'A heartwarming success for the community in Spain.' };
+  assert.equal(localScorer.score(s).decision, 'review');
+  assert.equal(localScorer.score({ ...s, neutralOk: true }).decision, 'publish');
+});
+
 test('blocklist matches whole words only', () => {
   assert.equal(scorer.blocked({ ...base, title: 'Two killed in crash' }), 'word: killed');
   assert.equal(scorer.blocked({ ...base, title: 'Local teacher wins national award' }), null); // "award" contains "war"
