@@ -1,5 +1,6 @@
 import Sentiment from 'sentiment';
 import { tokenize } from './util.js';
+import { cityNames, namesRegex } from './places.js';
 
 function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -18,17 +19,14 @@ export function createScorer(config, cities = []) {
   const blockedOutlets = new Set((config.blockedOutlets ?? []).map((o) => o.toLowerCase()));
 
   const sportsRe = config.sportsTerms?.length
-    ? new RegExp(`(?<![\\w'])(${config.sportsTerms.map(escapeRegex).join('|')})(?![\\w'])`, 'gi')
+    ? new RegExp(`(?<![\\w'])(${config.sportsTerms.map(escapeRegex).join('|')})(?![\\w])`, 'gi')
     : null;
 
-  // region slug -> matcher for the city's name and aliases ("Toronto", "GTA", ...)
-  const cityRes = new Map(cities.map((c) => [
-    c.slug,
-    new RegExp(`(?<![\w'])(${[c.name, ...(c.aliases ?? [])].map(escapeRegex).join('|')})(?![\w])`, 'i'),
-  ]));
+  // region slug -> matcher for every name the city goes by ("Toronto", "GTA", "Leslieville", ...)
+  const cityRes = new Map(cities.map((c) => [c.slug, namesRegex(cityNames(c))]));
 
   const dullRe = config.dullTerms?.length
-    ? new RegExp(`(?<![\w'])(${config.dullTerms.map(escapeRegex).join('|')})(?![\w])`, 'i')
+    ? new RegExp(`(?<![\\w'])(${config.dullTerms.map(escapeRegex).join('|')})(?![\\w])`, 'i')
     : null;
 
   /** A local story that actually names its city, and isn't wire copy run in several cities. */
@@ -94,6 +92,8 @@ export function createScorer(config, cities = []) {
     else if (positivity >= t.reviewPositivity) decision = 'review';
     // A headline with no description needs two positive words, not one stray "win".
     if (decision === 'publish' && !desc && !story.neutralOk && new Set(title.positive).size < 2) decision = 'review';
+    // Local politics and opinion pieces always get a human look, however upbeat they sound.
+    if (decision === 'publish' && dull && story.region) decision = 'review';
     // A news desk's local feed also carries world news. If the story never names the city, a person checks it.
     if (decision === 'publish' && story.region && !story.neutralOk && cityRes.size && !namesItsCity(story)) decision = 'review';
     // Google News gives headlines only and links to a redirect, so a person always checks these.

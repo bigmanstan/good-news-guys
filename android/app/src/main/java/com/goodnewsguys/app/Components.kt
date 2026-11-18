@@ -5,6 +5,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -138,12 +140,15 @@ fun Photo(url: String?, modifier: Modifier = Modifier) {
     AsyncImage(model = url, contentDescription = null, contentScale = ContentScale.Crop, modifier = modifier)
 }
 
+/** Topic chip, then the most specific place we know: "1.2 km · Leslieville", the neighbourhood, or the city. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun StoryChips(story: Story, modifier: Modifier = Modifier) {
+fun StoryChips(story: Story, modifier: Modifier = Modifier, place: String? = null) {
     val p = LocalPalette.current
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Chip(categoryOf(story.category).label, p.cat(story.category))
-        cityOf(story.region)?.let { Chip(it.name, p.cat("local")) }
+        val where = place ?: cityOf(story.region)?.name
+        if (where != null) Chip(where, p.cat("local"))
     }
 }
 
@@ -159,7 +164,7 @@ fun WideStoryTile(story: Story, ui: UiData, a: Actions, modifier: Modifier = Mod
     ) {
         Row(Modifier.padding(start = 18.dp, top = 18.dp, bottom = 8.dp, end = 14.dp)) {
             Column(Modifier.weight(1f)) {
-                StoryChips(story)
+                StoryChips(story, place = if (story.region != null) ui.placeLabel(story) else null)
                 Spacer(Modifier.height(10.dp))
                 Headline(story.headline, 18.sp, maxLines = 4)
                 if (story.summary.isNotBlank() && story.image == null) {

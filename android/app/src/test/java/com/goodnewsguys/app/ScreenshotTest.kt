@@ -50,17 +50,45 @@ class ScreenshotTest {
     @Test @Config(qualifiers = "w411dp-h3400dp-420dpi")
     fun homeDark() = shoot("home-dark", true) { HomeScreen(ui(), Actions()) }
 
-    @Test @Config(qualifiers = "w411dp-h1500dp-420dpi")
+    private val sampleArticle by lazy {
+        val p = "Volunteers planted three hundred trees along the river on Saturday morning, and neighbours brought soup and music. "
+        parseArticle(
+            "<p>${p.repeat(3)}</p><h2>A street that showed up</h2><p>${p.repeat(2)}</p>" +
+                "<blockquote>It felt like the whole street came out to help, even the kids.</blockquote>" +
+                "<ul><li>Next planting day is in the spring</li><li>Gloves and tools are provided</li></ul><p>${p.repeat(2)}</p>",
+            "https://example.com/story",
+        )!!
+    }
+
+    /** Toronto, near Leslieville. */
+    private val here = LatLon(43.665, -79.335)
+
+    @Test @Config(qualifiers = "w411dp-h2200dp-420dpi")
     fun storyLight() = shoot("story-light", false) {
         val s = digests.first().stories.first { it.image == null && it.region == null }
-        StoryScreen(s, ui(), Actions())
+        StoryScreen(s, ui(), Actions(), ArticleState.Ready(sampleArticle))
     }
 
     @Test @Config(qualifiers = "w411dp-h1500dp-420dpi")
     fun storyDark() = shoot("story-dark", true) {
         val s = digests.first().stories.first { it.image != null }
-        StoryScreen(s, ui(), Actions())
+        StoryScreen(s, ui(), Actions(), ArticleState.Loading)
     }
+
+    @Test @Config(qualifiers = "w411dp-h1500dp-420dpi")
+    fun storyUnavailable() = shoot("story-unavailable", false) {
+        val s = digests.first().stories.first { it.image == null && it.region != null }
+        StoryScreen(s, ui(), Actions(), ArticleState.Unavailable)
+    }
+
+    @Test @Config(qualifiers = "w411dp-h3400dp-420dpi")
+    fun homeNearMe() = shoot("home-near", false) { HomeScreen(ui().copy(here = here), Actions()) }
+
+    @Test @Config(qualifiers = "w411dp-h2600dp-420dpi")
+    fun localNearMe() = shoot("local-near", false) { LocalScreen(ui().copy(here = here), Actions()) }
+
+    @Test @Config(qualifiers = "w411dp-h1600dp-420dpi")
+    fun localNoLocation() = shoot("local-city", true) { LocalScreen(ui(), Actions()) }
 
     @Test @Config(qualifiers = "w411dp-h900dp-420dpi")
     fun cityPicker() = shoot("cities-light", false) { LocalScreen(ui(city = null), Actions()) }

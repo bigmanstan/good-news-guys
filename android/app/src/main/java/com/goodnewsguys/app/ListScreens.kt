@@ -1,6 +1,12 @@
 package com.goodnewsguys.app
 
 import androidx.compose.foundation.background
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -121,23 +127,55 @@ fun SavedScreen(ui: UiData, a: Actions) {
 @Composable
 fun LocalScreen(ui: UiData, a: Actions) {
     val p = LocalPalette.current
+    val c = p.cat("local")
     val city = cityOf(ui.city)
     if (city != null) {
         val stories = remember(city, ui.week) { ui.week.filter { it.region == city.slug } }
+        val near = ui.nearby
+        val nearIds = remember(near) { near.map { it.first.id }.toSet() }
         ListScaffold(
             title = city.name,
-            subtitle = if (stories.size == 1) "1 local story this week" else "${stories.size} local stories this week",
+            subtitle = when {
+                near.isNotEmpty() -> "${near.size} stories within ${NEAR_KM.toInt()} km of you this week"
+                stories.size == 1 -> "1 local story this week"
+                else -> "${stories.size} local stories this week"
+            },
             emoji = "📍", a = a, action = "Change city" to { a.setCity(null) },
         ) {
+            if (ui.here == null) {
+                item(key = "locate") {
+                    LocateTile(
+                        "See what’s happening on your street",
+                        "Sorts ${city.name}’s stories by how close they are to you. Your location stays on this phone.",
+                        ui, a,
+                    )
+                }
+            }
+            if (near.isNotEmpty()) {
+                item(key = "near-title") { SectionTitle("Around you", trailing = "Closest first") }
+                items(near.size, key = { "near-${near[it].first.id}" }) { i ->
+                    WideStoryTile(near[i].first, ui, a, tinted = i == 0)
+                }
+                if (stories.size > near.size) item(key = "rest-title") { SectionTitle("Across ${city.name}") }
+            }
             if (stories.isEmpty()) item { EmptyTile("Nothing from ${city.name} this week yet. Check back tomorrow.") }
-            storiesByDay(stories, ui, a)
+            storiesByDay(stories.filter { it.id !in nearIds }, ui, a)
         }
         return
     }
 
     val counts = remember(ui.week) { CITIES.associate { c -> c.slug to ui.week.count { it.region == c.slug } } }
     val tints = listOf("local", "science", "culture", "general", "space", "environment", "health", "tech")
-    ListScaffold(title = "Near you", subtitle = "Pick a city. It’s saved on this phone only.", emoji = "📍", a = a) {
+    ListScaffold(title = "Near you", subtitle = "Find good news from your own neighbourhood.", emoji = "📍", a = a) {
+        item(key = "locate") {
+            LocateTile("Use my location", "We’ll pick your city and show the stories closest to you first. Your location stays on this phone.", ui, a)
+        }
+        item(key = "or") {
+            Text(
+                "OR PICK A CITY", Modifier.padding(start = 4.dp, top = 10.dp),
+                color = p.muted, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
+            )
+        }
         val rows = CITIES.chunked(2)
         items(rows.size, key = { "cities-$it" }) { r ->
             Row(Modifier.fillMaxWidth().height(124.dp), horizontalArrangement = Arrangement.spacedBy(Gap)) {
@@ -149,6 +187,32 @@ fun LocalScreen(ui: UiData, a: Actions) {
                         a.setCity(c.slug)
                     }
                 }
+            }
+        }
+    }
+}
+
+/** The big "use my location" tile. */
+@Composable
+private fun LocateTile(title: String, body: String, ui: UiData, a: Actions) {
+    val p = LocalPalette.current
+    val c = p.cat("local")
+    Tile(Modifier.fillMaxWidth(), color = c, onClick = a.useLocation) {
+        Canvas(Modifier.matchParentSize()) {
+            drawCircle(Color.White.copy(alpha = 0.10f), size.height * 1.1f, Offset(size.width * 0.95f, 0f))
+            drawCircle(Color.White.copy(alpha = 0.12f), size.height * 0.55f, Offset(size.width * 0.95f, 0f))
+        }
+        Column(Modifier.padding(20.dp)) {
+            Box(Modifier.size(44.dp).clip(CircleShape).background(p.surface), contentAlignment = Alignment.Center) {
+                Icon(Icons.Filled.LocationOn, contentDescription = null, tint = c, modifier = Modifier.size(22.dp))
+            }
+            Spacer(Modifier.height(14.dp))
+            Headline(if (ui.locating) "Finding you…" else title, 22.sp, color = p.surface)
+            Spacer(Modifier.height(4.dp))
+            Text(body, color = p.surface.copy(alpha = 0.85f), fontSize = 14.sp, lineHeight = 20.sp)
+            ui.locationNote?.let {
+                Spacer(Modifier.height(10.dp))
+                Text(it, color = p.surface, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp)
             }
         }
     }

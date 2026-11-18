@@ -326,6 +326,7 @@ private fun NearYouTile(ui: UiData, a: Actions) {
     val c = p.cat("local")
     val city = cityOf(ui.city)
     val local = remember(ui.week, ui.city) { ui.week.filter { it.region != null && it.region == ui.city } }
+    val near = ui.nearby
     Tile(Modifier.fillMaxWidth(), color = p.tint(c, if (p.dark) 0.24f else 0.16f), onClick = { a.open(Screen.Local) }) {
         Canvas(Modifier.matchParentSize()) {
             drawCircle(c.copy(alpha = 0.10f), size.height * 0.9f, Offset(size.width, size.height))
@@ -337,34 +338,82 @@ private fun NearYouTile(ui: UiData, a: Actions) {
                 }
                 Spacer(Modifier.size(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text("NEAR YOU", color = c, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                    Text(
+                        if (near.isNotEmpty()) "AROUND YOU" else "NEAR YOU",
+                        color = c, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
+                    )
                     Headline(city?.name ?: "Pick your city", 22.sp)
                 }
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = p.ink)
             }
             Spacer(Modifier.height(12.dp))
-            if (city == null) {
-                Text("Good news from Toronto, New York, London and five more cities.", color = p.muted, fontSize = 15.sp, lineHeight = 21.sp)
-            } else if (local.isEmpty()) {
-                Text("Nothing from ${city.name} this week yet. Check back tomorrow.", color = p.muted, fontSize = 15.sp, lineHeight = 21.sp)
-            } else {
-                local.take(2).forEach { s ->
-                    Row(Modifier.padding(vertical = 4.dp)) {
-                        Box(Modifier.padding(top = 8.dp).size(6.dp).clip(CircleShape).background(c))
-                        Spacer(Modifier.size(10.dp))
+            when {
+                city == null -> {
+                    Text(
+                        "Good news from your neighbourhood, in Toronto, New York, London and five more cities.",
+                        color = p.muted, fontSize = 15.sp, lineHeight = 21.sp,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    PillButton(if (ui.locating) "Finding you…" else "Use my location", c, p.surface, onClick = a.useLocation)
+                }
+                local.isEmpty() -> Text(
+                    "Nothing from ${city.name} this week yet. Check back tomorrow.",
+                    color = p.muted, fontSize = 15.sp, lineHeight = 21.sp,
+                )
+                else -> {
+                    // Closest stories first when we know where the reader is, otherwise the newest.
+                    val rows = if (near.isNotEmpty()) near.take(3).map { (s, pk) -> s to "${formatKm(pk.second)} · ${pk.first.name}" }
+                    else local.take(2).map { it to it.places.firstOrNull()?.name }
+                    rows.forEach { (s, label) ->
+                        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable { a.open(Screen.Detail(s)) }.padding(vertical = 6.dp)) {
+                            if (label != null) {
+                                Text(label.uppercase(), color = c, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.6.sp)
+                                Spacer(Modifier.height(2.dp))
+                            }
+                            Text(
+                                s.headline, color = p.ink, fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.Medium,
+                                maxLines = 2, overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            s.headline, color = p.ink, fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.Medium,
-                            maxLines = 2, overflow = TextOverflow.Ellipsis,
+                            when {
+                                near.isNotEmpty() -> "${near.size} near you · ${local.size} across ${city.name}"
+                                local.size == 1 -> "1 story this week"
+                                else -> "${local.size} stories this week"
+                            },
+                            Modifier.weight(1f), color = c, fontSize = 13.sp, fontWeight = FontWeight.Bold,
                         )
+                        if (ui.here == null) {
+                            Text(
+                                if (ui.locating) "Finding you…" else "Use my location",
+                                Modifier.clip(CircleShape).clickable(onClick = a.useLocation).padding(horizontal = 6.dp, vertical = 4.dp),
+                                color = p.ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                            )
+                        }
                     }
                 }
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    if (local.size == 1) "1 story this week" else "${local.size} stories this week",
-                    color = c, fontSize = 13.sp, fontWeight = FontWeight.Bold,
-                )
+            }
+            ui.locationNote?.let {
+                Spacer(Modifier.height(8.dp))
+                Text(it, color = p.muted, fontSize = 13.sp, lineHeight = 18.sp)
             }
         }
+    }
+}
+
+/** A small rounded button. */
+@Composable
+fun PillButton(text: String, container: Color, content: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Row(
+        modifier.clip(CircleShape).background(container).clickable(onClick = onClick).padding(horizontal = 18.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(Icons.Filled.Place, contentDescription = null, tint = content, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.size(6.dp))
+        Text(text, color = content, fontSize = 14.sp, fontWeight = FontWeight.Bold)
     }
 }
 

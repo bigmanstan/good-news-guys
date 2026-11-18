@@ -38,7 +38,7 @@ Extra flags for `node pipeline/run.js`: `--date YYYY-MM-DD`, `--no-local`, `--on
 
 1. **6 AM Toronto time**: a GitHub Actions workflow starts a Node script.
 2. **Fetch**: the script pulls about 30–50 RSS feeds and normalizes each item (title, link, source, date, description, image).
-3. **Filter**: all rules are plain code, with no LLM or outside service. Skip patterns drop sports results, spam and listicles, and a word blocklist drops obvious negatives. Items that arrive with only a headline get their description from the article page's own meta tags, and the blocklist runs again on that text. A word-list scorer (the AFINN sentiment lexicon plus our own weights in `scoring.json`) then rates each remaining story positive, neutral or negative, with a confidence score. Confident positives go into the digest. Local feeds get a gentler bar, because city news is rarely gushing: a local story may be up to 84 hours old, and a calm one with no negative words publishes if it names its city (or comes from a city-guide outlet). Politics never gets that pass, a headline that runs in two cities' feeds is treated as national wire copy, and a news desk's story that never names the city goes to review. Uncertain ones go to the review queue, never straight to the site.
+3. **Filter**: all rules are plain code, with no LLM or outside service. Skip patterns drop sports results, spam and listicles, and a word blocklist drops obvious negatives. Items that arrive with only a headline get their description from the article page's own meta tags, and the blocklist runs again on that text. A word-list scorer (the AFINN sentiment lexicon plus our own weights in `scoring.json`) then rates each remaining story positive, neutral or negative, with a confidence score. Confident positives go into the digest. Local stories are also tagged with the neighbourhoods and nearby towns they mention (listed with coordinates in `config/cities.json`), so the app can show what's happening closest to the reader. Local feeds get a gentler bar, because city news is rarely gushing: a local story may be up to 84 hours old, and a calm one with no negative words publishes if it names its city (or comes from a city-guide outlet). Politics never gets that pass, a headline that runs in two cities' feeds is treated as national wire copy, and a news desk's story that never names the city goes to review. Uncertain ones go to the review queue, never straight to the site.
 4. **Dedupe**: stories with very similar titles (by word overlap) are merged. The most reputable source becomes the main link, and the others are listed under "also covered by."
 5. **Summarize**: each story gets a 2–3 sentence summary, a category, a read time and a source credit.
 6. **Publish**: the day is saved as `data/digests/YYYY-MM-DD.json` and committed, which triggers a Cloudflare Pages rebuild.
@@ -81,3 +81,11 @@ Each morning the pipeline opens a GitHub pull request listing uncertain stories.
 - **Email digests**: one more step at the end of the daily job, using Brevo or Resend's free tier.
 - **Push notifications**: Web Push through a Cloudflare Worker.
 - **Review queue**: move it into Supabase if GitHub-based reviews get unwieldy.
+
+## Android app
+
+`android/` is a native Kotlin and Jetpack Compose reader. It reads the digest files straight from this repo and keeps the past week on the phone.
+
+- **Reader view:** stories open in the app. It downloads the article page on the phone and keeps only the text and photos (Readability, like Firefox Reader View). Sites that block apps or sit behind a paywall show the summary and a link instead.
+- **Near you:** with the reader's permission, the phone's approximate location picks the city and sorts local stories by distance to the places they mention. The location stays on the phone.
+- **Build:** `cd android && ./gradlew assembleRelease`. `./gradlew testDebugUnitTest` renders every screen to `app/build/shots`; add `-Pgng.live=true` to also run the reader on today's real stories.

@@ -19,7 +19,7 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // Signed with the debug key so the APK can be sideloaded. Use a real key before any store upload.
             signingConfig = signingConfigs.getByName("debug")
         }
@@ -38,6 +38,8 @@ android {
             all {
                 it.systemProperty("roborazzi.test.record", "true")
                 it.systemProperty("gng.digests", rootProject.file("../data/digests").absolutePath)
+                // ./gradlew testDebugUnitTest -Pgng.live=true also fetches real articles through the reader.
+                it.systemProperty("gng.live", project.findProperty("gng.live")?.toString() ?: "false")
             }
         }
     }
@@ -53,6 +55,9 @@ dependencies {
     implementation("androidx.core:core-ktx:1.16.0")
     implementation("io.coil-kt.coil3:coil-compose:3.3.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
+    // Reader view: pulls the article text out of the publisher's page (a port of Firefox Reader View).
+    implementation("net.dankito.readability4j:readability4j:1.0.8")
+    implementation("org.jsoup:jsoup:1.18.3")
 
     // Screenshot tests: render the screens on the PC, no phone or emulator needed.
     testImplementation(platform("androidx.compose:compose-bom:2025.09.00"))
