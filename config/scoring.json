@@ -3,8 +3,8 @@
   "maxAgeHours": 36,
   "_localHelp": "Local (city) feeds are quieter, so they get a longer window and a gentler bar. localMaxAgeHours: how old a local story may be. thresholds.localPublishPositivity: a local story that names its city and has no negative words publishes at this score. Stories that show up in two or more cities' feeds are national wire copy and get neither.",
   "localMaxAgeHours": 84,
-  "_dullHelp": "dullTerms: politics and officialdom. A story with one of these can still publish if it is clearly positive, but never through the gentler neutral rules.",
-  "dullTerms": ["mayor", "mayoral", "councillor", "councillors", "council", "alderman", "alderpeople", "conservatives", "liberals", "ndp", "democrats", "republicans", "dsa", "premier", "minister", "ministers", "governor", "senator", "mpp", "mla", "party", "caucus", "campaign", "testifies", "testimony", "trial", "court", "jail", "jails", "budget", "tax", "taxes", "salary", "tenants", "landlord", "landlords", "union", "bylaw", "zoning", "forbes"],
+  "_dullHelp": "dullTerms: politics, officialdom and opinion. A global story with one of these can still publish if it is clearly positive; a local one goes to review instead. Neither gets the gentler neutral rules.",
+  "dullTerms": ["conservative", "liberal", "parliament", "letters", "you said it", "stellantis", "mayor", "committee", "letter", "opinion", "op-ed", "editorial", "column", "mayoral", "councillor", "councillors", "council", "alderman", "alderpeople", "conservatives", "liberals", "ndp", "democrats", "republicans", "dsa", "premier", "minister", "ministers", "governor", "senator", "mpp", "mla", "party", "caucus", "campaign", "testifies", "testimony", "trial", "court", "jail", "jails", "budget", "tax", "taxes", "salary", "tenants", "landlord", "landlords", "union", "bylaw", "zoning", "forbes"],
   "reviewLimit": 30,
   "thresholds": {
     "publishPositivity": 0.62,
@@ -15,7 +15,7 @@
     "headlineOnlyConfidence": 0.6
   },
   "_skipHelp": "skipPatterns are regular expressions tested against the headline (case-insensitive). They catch topics that aren't news we want, such as sports results, spam and listicles, rather than negative news.",
-  "skipPatterns": [
+  "skipPatterns": ["^in my opinion", "^opinion:", "^you said it", "^letters?:", "^letters to the editor", 
     "\\b(nhl|nfl|nba|wnba|mlb|mls|cfl|ahl|ohl|whl|nsl|ncaa|epl|premier league|super league|champions league)\\b",
     "\\b(game recap|game preview|highlights|playoffs?|touchdowns?|hat trick|goal streak|point streak|scores? twice|grey cup|stanley cup|super bowl|world series|draft lottery|free agents?|skid|standings)\\b",
     "\\b(vs\\.?|v\\.)\\s",
@@ -29,7 +29,7 @@
   "blockedOutlets": ["UB - Universitat de Barcelona"],
   "_sportsHelp": "A story is skipped as sports when its headline + description contain at least sportsThreshold different terms from this list. Team names are for the cities in cities.json.",
   "sportsThreshold": 2,
-  "sportsTerms": ["curling", "rugby", "nationals", "quins", "harlequins", "gloucester", "saracens", "bears", "rangers", "stadium", "captain", 
+  "sportsTerms": ["power play", "nhl", "nba", "nfl", "mlb", "mls", "esports", "grey cup", "stanley cup", "curling", "rugby", "nationals", "quins", "harlequins", "gloucester", "saracens", "bears", "rangers", "stadium", "captain", 
     "scored", "scores", "goals", "assists", "period", "inning", "innings", "quarter", "halftime", "puck", "rebounds", "touchdown", "field goal",
     "goaltender", "goalie", "defenceman", "defenseman", "forward", "striker", "midfielder", "quarterback", "pitcher", "rookie", "coach", "roster",
     "season", "playoff", "playoffs", "rankings", "standings", "win over", "victory over", "comeback win", "game", "games", "match", "fixture", "league",
@@ -43,7 +43,7 @@
     "arsenal", "chelsea", "tottenham", "west ham", "fulham", "crystal palace", "brentford",
     "penguins", "bruins", "capitals", "golden knights", "ducks", "timberwolves", "celtics", "lakers"
   ],
-  "blocklist": [
+  "blocklist": ["man shot", "woman shot", "teen shot", "shot dead", "fatally shot", "shot and killed", "casino", "casinos", "cocaine", "fentanyl", "drugs", "drug bust", "smuggling", "seized", "seize", "seizes", "charged", 
     "killed", "kills", "killing", "murder", "murdered", "homicide", "shooting", "shot dead", "stabbing", "stabbed",
     "dead", "dies", "died", "death toll", "fatal", "fatally", "suicide", "overdose",
     "war", "airstrike", "missile", "bombing", "terror", "terrorist", "hostage", "massacre", "genocide", "invasion",

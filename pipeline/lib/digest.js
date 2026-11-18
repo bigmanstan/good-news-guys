@@ -11,6 +11,8 @@ export function toStory(s, date) {
     alsoCoveredBy: s.alsoCoveredBy ?? [],
     category: s.category,
     region: s.region,
+    // Neighbourhoods or nearby towns the story mentions, with coordinates for the app.
+    places: s.places ?? [],
     positivity: s.positivity,
     readTime: readTime(s),
     publishedAt: s.publishedAt,

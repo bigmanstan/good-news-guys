@@ -8,6 +8,9 @@ import java.util.Locale
 
 data class Coverage(val name: String, val link: String)
 
+/** A neighbourhood or nearby town a local story mentions. */
+data class Place(val name: String, val lat: Double, val lon: Double)
+
 data class Story(
     val id: String,
     val headline: String,
@@ -17,6 +20,7 @@ data class Story(
     val alsoCoveredBy: List<Coverage>,
     val category: String,
     val region: String?,
+    val places: List<Place> = emptyList(),
     val positivity: Double,
     val readTime: Int,
     val digestDate: String,
@@ -42,17 +46,17 @@ val CATEGORIES = listOf(
 
 fun categoryOf(slug: String?): Category = CATEGORIES.find { it.slug == slug } ?: CATEGORIES.last()
 
-data class City(val slug: String, val name: String, val country: String)
+data class City(val slug: String, val name: String, val country: String, val lat: Double, val lon: Double)
 
 val CITIES = listOf(
-    City("toronto", "Toronto", "Canada"),
-    City("montreal", "Montréal", "Canada"),
-    City("vancouver", "Vancouver", "Canada"),
-    City("calgary", "Calgary", "Canada"),
-    City("ottawa", "Ottawa", "Canada"),
-    City("new-york", "New York", "USA"),
-    City("chicago", "Chicago", "USA"),
-    City("london", "London", "UK"),
+    City("toronto", "Toronto", "Canada", 43.6532, -79.3832),
+    City("montreal", "Montréal", "Canada", 45.5019, -73.5674),
+    City("vancouver", "Vancouver", "Canada", 49.2827, -123.1207),
+    City("calgary", "Calgary", "Canada", 51.0447, -114.0719),
+    City("ottawa", "Ottawa", "Canada", 45.4215, -75.6972),
+    City("new-york", "New York", "USA", 40.7128, -74.0060),
+    City("chicago", "Chicago", "USA", 41.8781, -87.6298),
+    City("london", "London", "UK", 51.5072, -0.1276),
 )
 
 fun cityOf(slug: String?): City? = CITIES.find { it.slug == slug }
@@ -73,6 +77,11 @@ fun parseStory(o: JSONObject, fallbackDate: String = ""): Story {
         },
         category = o.str("category") ?: "general",
         region = o.str("region")?.takeIf { it.isNotBlank() },
+        places = o.optJSONArray("places")?.let { arr ->
+            (0 until arr.length()).mapNotNull { i ->
+                arr.optJSONObject(i)?.let { Place(it.str("name").orEmpty(), it.optDouble("lat"), it.optDouble("lon")) }
+            }.filter { it.name.isNotBlank() && !it.lat.isNaN() && !it.lon.isNaN() }
+        }.orEmpty(),
         positivity = o.optDouble("positivity", 0.0),
         readTime = o.optInt("readTime", 3),
         digestDate = o.str("digestDate") ?: fallbackDate,
@@ -86,6 +95,7 @@ fun Story.toJson(): JSONObject = JSONObject()
     .put("sourceName", sourceName).put("sourceLink", sourceLink)
     .put("alsoCoveredBy", JSONArray(alsoCoveredBy.map { JSONObject().put("name", it.name).put("link", it.link) }))
     .put("category", category).put("region", region ?: JSONObject.NULL)
+    .put("places", JSONArray(places.map { JSONObject().put("name", it.name).put("lat", it.lat).put("lon", it.lon) }))
     .put("positivity", positivity).put("readTime", readTime)
     .put("digestDate", digestDate).put("image", image ?: JSONObject.NULL).put("pinned", pinned)
 

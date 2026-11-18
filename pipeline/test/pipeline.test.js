@@ -8,6 +8,7 @@ import { dedupe, similarity, titleTokens } from '../lib/dedupe.js';
 import { summarize, readTime } from '../lib/summarize.js';
 import { mergeDigest, mergeReview, pickTop3 } from '../lib/digest.js';
 import { parseMeta } from '../lib/enrich.js';
+import { createPlaceFinder } from '../lib/places.js';
 
 const scoring = JSON.parse(readFileSync(new URL('../../config/scoring.json', import.meta.url)));
 const scorer = createScorer(scoring);
@@ -51,6 +52,8 @@ test('skip patterns catch sports results and stream spam', () => {
 test('sports detector needs two different sports terms', () => {
   assert.equal(scorer.blocked({ ...base, title: 'Levi, McDavid help Oilers top Maple Leafs' }), 'sports');
   assert.equal(scorer.blocked({ ...base, title: 'Senators grind out a win', description: 'Ottawa scored twice in the third period.' }), 'sports');
+  // A possessive still counts: "Senators' power play".
+  assert.equal(scorer.blocked({ ...base, title: "Ottawa Senators' power play finally converts" }), 'sports');
   // One stray match is fine: a "game" in a non-sports story shouldn't drop it.
   assert.equal(scorer.blocked({ ...base, title: 'Library board game night draws record crowd' }), null);
 });
@@ -86,6 +89,21 @@ test('a positive story in a local news feed that never names the city goes to re
   const s = { ...base, region: 'toronto', title: 'Volunteers rescued 200 sea turtles and the hatchlings are thriving', description: 'A heartwarming success for the community in Spain.' };
   assert.equal(localScorer.score(s).decision, 'review');
   assert.equal(localScorer.score({ ...s, neutralOk: true }).decision, 'publish');
+});
+
+test('local stories are tagged with the neighbourhoods they mention', () => {
+  const find = createPlaceFinder(cities);
+  const s = { region: 'toronto', title: 'New bakery opens in Leslieville', description: 'The owners grew up in the Beaches and Scarborough.' };
+  assert.deepEqual(find(s).map((p) => p.name), ['Leslieville', 'The Beaches', 'Scarborough']);
+  assert.equal(typeof find(s)[0].lat, 'number');
+  // Only the story's own city counts: "Chinatown" in a London story is London's Chinatown or nothing.
+  assert.deepEqual(find({ region: null, title: 'Leslieville bakery', description: '' }), []);
+  assert.deepEqual(find({ region: 'vancouver', title: 'North Vancouver trail reopens', description: '' }).map((p) => p.name), ['North Vancouver']);
+});
+
+test('naming a neighbourhood counts as naming the city', () => {
+  const s = { ...base, region: 'chicago', title: 'Pilsen mural festival returns', description: 'Artists will paint walls along 18th Street this weekend.' };
+  assert.equal(localScorer.score(s).decision, 'publish');
 });
 
 test('blocklist matches whole words only', () => {

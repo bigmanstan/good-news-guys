@@ -15,6 +15,7 @@ import { normalizeItem } from './lib/normalize.js';
 import { enrichDescriptions } from './lib/enrich.js';
 import { createScorer } from './lib/score.js';
 import { dedupe } from './lib/dedupe.js';
+import { createPlaceFinder } from './lib/places.js';
 import { toStory, mergeDigest, mergeReview } from './lib/digest.js';
 import { dateInToronto, hourInToronto, readJson, writeJson } from './lib/util.js';
 
@@ -95,6 +96,7 @@ const stats = { wire: 0, raw: 0, stale: 0, repeat: 0, blocked: 0, publish: 0, re
 const blockedTerms = {};
 
 const scorer = createScorer(scoringCfg, citiesCfg.cities);
+const findPlaces = createPlaceFinder(citiesCfg.cities);
 const byId = new Set();
 const fresh = [];
 
@@ -140,7 +142,7 @@ if (enriched.tried) console.log(`Descriptions: filled ${enriched.filled}/${enric
 const candidates = [];
 for (const item of fresh) {
   if (item.description && isBlocked(item)) continue;
-  candidates.push({ ...item, ...scorer.score(item), category: scorer.categorize(item) });
+  candidates.push({ ...item, ...scorer.score(item), category: scorer.categorize(item), places: findPlaces(item) });
 }
 
 // 4. Dedupe across outlets
